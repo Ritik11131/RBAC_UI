@@ -1,16 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { GenericDataTableComponent, TableColumn, TableAction, TableConfig } from '../../shared/components/tables/generic-data-table/generic-data-table.component';
-
-interface Module {
-  id: number;
-  name: string;
-  description: string;
-  status: 'Active' | 'Inactive' | 'Pending';
-  createdAt: string;
-  updatedAt: string;
-}
+import { ModulesService } from '../../core/services/modules.service';
+import { Module, PaginationParams } from '../../core/interfaces/module.interface';
+import { formatDateMedium } from '../../shared/utils/date.util';
 
 @Component({
   selector: 'app-modules',
@@ -22,50 +17,21 @@ interface Module {
   templateUrl: './modules.component.html',
   styleUrl: './modules.component.css'
 })
-export class ModulesComponent {
-  // Sample module data
-  modulesData: Module[] = [
-    {
-      id: 1,
-      name: 'User Management',
-      description: 'Manage users and their permissions',
-      status: 'Active',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20',
-    },
-    {
-      id: 2,
-      name: 'Role Management',
-      description: 'Define and manage user roles',
-      status: 'Active',
-      createdAt: '2024-01-16',
-      updatedAt: '2024-01-21',
-    },
-    {
-      id: 3,
-      name: 'Permission Management',
-      description: 'Configure system permissions',
-      status: 'Pending',
-      createdAt: '2024-01-17',
-      updatedAt: '2024-01-17',
-    },
-    {
-      id: 4,
-      name: 'Entity Management',
-      description: 'Manage system entities',
-      status: 'Active',
-      createdAt: '2024-01-18',
-      updatedAt: '2024-01-22',
-    },
-    {
-      id: 5,
-      name: 'Meter Management',
-      description: 'Manage meter configurations',
-      status: 'Inactive',
-      createdAt: '2024-01-19',
-      updatedAt: '2024-01-19',
-    },
-  ];
+export class ModulesComponent implements OnInit, OnDestroy {
+  private modulesService = inject(ModulesService);
+  private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
+
+  // Component state
+  modulesData: Module[] = [];
+  isLoading = false;
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalRecords = 0;
+  totalPages = 0;
+  searchTerm = '';
+  sortColumn: string | null = null;
+  sortOrder: 'asc' | 'desc' | null = null;
 
   // Table column definitions
   columns: TableColumn<Module>[] = [
@@ -74,34 +40,18 @@ export class ModulesComponent {
       label: 'Module Name',
       sortable: true,
       searchable: true,
-      type: 'custom',
-      render: (item) => `
-        <div>
-          <p class="block font-medium text-gray-800 text-theme-sm dark:text-white/90">${item.name}</p>
-          <span class="text-sm font-normal text-gray-500 dark:text-gray-400">${item.description}</span>
-        </div>
-      `,
     },
     {
-      key: 'status',
-      label: 'Status',
-      type: 'badge',
-      sortable: true,
-      badgeColor: (item) => {
-        if (item.status === 'Active') return 'success';
-        if (item.status === 'Pending') return 'warning';
-        return 'error';
-      },
-    },
-    {
-      key: 'createdAt',
+      key: 'creation_time',
       label: 'Created At',
       sortable: true,
+      render: (item) => formatDateMedium(item.creation_time),
     },
     {
-      key: 'updatedAt',
-      label: 'Updated At',
+      key: 'last_update_on',
+      label: 'Last Updated',
       sortable: true,
+      render: (item) => formatDateMedium(item.last_update_on),
     },
   ];
 
@@ -119,7 +69,7 @@ export class ModulesComponent {
     emptyMessage: 'No modules found',
     enableSorting: true,
     enableSelection: true,
-    useDropdownMenu: true, // Use dropdown menu for actions
+    useDropdownMenu: true,
   };
 
   // Action buttons
@@ -148,28 +98,140 @@ export class ModulesComponent {
     },
   ];
 
+  ngOnInit(): void {
+    this.loadModules();
+    this.setupSearchDebounce();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.searchSubject.complete();
+  }
+
+  /**
+   * Setup debounced search to avoid too many API calls
+   */
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(searchTerm => {
+      this.searchTerm = searchTerm;
+      this.currentPage = 1; // Reset to first page on search
+      this.loadModules();
+    });
+  }
+
+  /**
+   * Load modules from API
+   */
+  loadModules(): void {
+    this.isLoading = true;
+
+    const params: PaginationParams = {
+      page: this.currentPage,
+      limit: this.itemsPerPage,
+    };
+
+    if (this.searchTerm) {
+      params.search = this.searchTerm;
+    }
+
+    if (this.sortColumn && this.sortOrder) {
+      params.sortBy = this.sortColumn;
+      params.sortOrder = this.sortOrder;
+    }
+
+    this.modulesService.getModules(params)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.modulesData = response.data;
+          this.totalRecords = response.pagination.total;
+          this.totalPages = response.pagination.totalPages;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading modules:', error);
+          this.isLoading = false;
+          // TODO: Show error toast/notification
+        }
+      });
+  }
+
+
   // Event handlers
-  onPageChange(page: number) {
-    console.log('Page changed to:', page);
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadModules();
   }
 
-  onItemsPerPageChange(itemsPerPage: number) {
-    console.log('Items per page changed to:', itemsPerPage);
+  onItemsPerPageChange(itemsPerPage: number): void {
+    this.itemsPerPage = itemsPerPage;
+    this.currentPage = 1; // Reset to first page
+    this.loadModules();
   }
 
-  onSortChange(sort: { column: string; direction: 'asc' | 'desc' | null }) {
-    console.log('Sort changed:', sort);
+  onSortChange(sort: { column: string; direction: 'asc' | 'desc' | null }): void {
+    this.sortColumn = sort.column;
+    this.sortOrder = sort.direction;
+    this.currentPage = 1; // Reset to first page on sort
+    this.loadModules();
   }
 
-  onSearchChange(searchTerm: string) {
-    console.log('Search changed:', searchTerm);
+  onSearchChange(searchTerm: string): void {
+    this.searchSubject.next(searchTerm);
   }
 
-  onSelectionChange(selected: Module[]) {
+  onSelectionChange(selected: Module[]): void {
     console.log('Selection changed:', selected);
+    // TODO: Handle bulk actions
   }
 
-  onActionClick(event: { action: string; item: Module }) {
-    console.log('Action clicked:', event);
+  onActionClick(event: { action: string; item: Module }): void {
+    const { action, item } = event;
+    
+    switch (action) {
+      case 'Edit':
+        this.handleEdit(item);
+        break;
+      case 'Delete':
+        this.handleDelete(item);
+        break;
+      default:
+        console.log('Unknown action:', action);
+    }
+  }
+
+  /**
+   * Handle edit action
+   */
+  private handleEdit(module: Module): void {
+    console.log('Edit module:', module);
+    // TODO: Open edit modal/form
+  }
+
+  /**
+   * Handle delete action
+   */
+  private handleDelete(module: Module): void {
+    if (confirm(`Are you sure you want to delete "${module.name}"?`)) {
+      this.isLoading = true;
+      this.modulesService.deleteModule(module.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.loadModules(); // Reload list
+            // TODO: Show success toast
+          },
+          error: (error) => {
+            console.error('Error deleting module:', error);
+            this.isLoading = false;
+            // TODO: Show error toast
+          }
+        });
+    }
   }
 }

@@ -6,6 +6,7 @@ import { ButtonComponent } from '../../ui/button/button.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdown.component';
+import { SpinnerComponent } from '../../common/spinner/spinner.component';
 
 
 export type ColumnType = 'text' | 'badge' | 'custom' | 'checkbox';
@@ -58,6 +59,7 @@ export interface TableConfig {
     CheckboxComponent,
     SafeHtmlPipe,
     TableDropdownComponent,
+    SpinnerComponent,
   ],
   templateUrl: './generic-data-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -65,9 +65,7 @@
         
         <!-- Table -->
         @if (loading) {
-        <div class="flex items-center justify-center py-12">
-          <div class="text-gray-500 dark:text-gray-400">Loading...</div>
-        </div>
+        <app-spinner size="md" [showText]="true" text="Loading data..." />
         } @else if (currentItems.length === 0) {
         <div class="flex items-center justify-center py-12">
           <div class="text-gray-500 dark:text-gray-400">{{ mergedConfig.emptyMessage || 'No data available' }}</div>
