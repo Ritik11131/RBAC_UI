@@ -79,7 +79,7 @@ export class ModulesService {
    * @returns Observable of updated module
    */
   updateModule(id: string, module: Partial<Module>): Observable<{ success: boolean; message: string; data: Module }> {
-    return this.http.put<{ success: boolean; message: string; data: Module }>(`${this.apiUrl}/${id}`, module).pipe(
+    return this.http.patch<{ success: boolean; message: string; data: Module }>(`${this.apiUrl}/${id}`, module).pipe(
       catchError((error) => {
         console.error('Error updating module:', error);
         return throwError(() => error);

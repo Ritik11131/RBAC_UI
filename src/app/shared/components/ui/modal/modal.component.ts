@@ -27,6 +27,7 @@ export class ModalComponent implements OnInit, OnDestroy, OnChanges {
   @Input() className = '';
   @Input() showCloseButton = true;
   @Input() isFullscreen = false;
+  @Input() widthClass: string = 'w-full sm:w-[500px] md:w-[600px] lg:w-[700px]'; // Default responsive width
 
   constructor(private el: ElementRef) {}
 

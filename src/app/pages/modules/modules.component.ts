@@ -1,11 +1,14 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, Observable } from 'rxjs';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { GenericDataTableComponent, TableColumn, TableAction, TableConfig } from '../../shared/components/tables/generic-data-table/generic-data-table.component';
 import { ModulesService } from '../../core/services/modules.service';
 import { Module, PaginationParams } from '../../core/interfaces/module.interface';
 import { formatDateMedium } from '../../shared/utils/date.util';
+import { GenericFormModalComponent } from '../../shared/components/form/generic-form-modal/generic-form-modal.component';
+import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
+import { Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-modules',
@@ -13,6 +16,7 @@ import { formatDateMedium } from '../../shared/utils/date.util';
     CommonModule,
     PageBreadcrumbComponent,
     GenericDataTableComponent,
+    GenericFormModalComponent,
   ],
   templateUrl: './modules.component.html',
   styleUrl: './modules.component.css'
@@ -32,6 +36,12 @@ export class ModulesComponent implements OnInit, OnDestroy {
   searchTerm = '';
   sortColumn: string | null = null;
   sortOrder: 'asc' | 'desc' | null = null;
+
+  // Form modal state
+  isFormModalOpen = false;
+  formConfig!: GenericFormConfig<Module>;
+  currentEditModule: Module | null = null;
+  isLoadingEditData = false;
 
   // Table column definitions
   columns: TableColumn<Module>[] = [
@@ -104,6 +114,44 @@ export class ModulesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadModules();
     this.setupSearchDebounce();
+    this.initializeFormConfig();
+  }
+
+  /**
+   * Initialize form configuration for modules
+   */
+  private initializeFormConfig(): void {
+    const fields: FormFieldConfig[] = [
+      {
+        key: 'name',
+        label: 'Module Name',
+        type: 'text',
+        placeholder: 'Enter module name',
+        required: true,
+        validators: [Validators.required, Validators.minLength(2)],
+        gridCols: 12,
+        order: 1,
+        hint: 'Enter a unique name for the module',
+      },
+    ];
+
+    this.formConfig = {
+      title: 'Create Module',
+      subtitle: 'Add a new module to organize your application features',
+      fields,
+      submitLabel: 'Create Module',
+      cancelLabel: 'Cancel',
+      mode: 'create',
+      modalWidth: 'w-full sm:w-[400px] md:w-[450px]', // Smaller modal width for modules
+      onSubmit: (data: Partial<Module>) => this.handleFormSubmit(data),
+      onSuccess: (response) => {
+        console.log('Module created successfully:', response);
+        this.loadModules();
+      },
+      onError: (error) => {
+        console.error('Error creating module:', error);
+      },
+    };
   }
 
   ngOnDestroy(): void {
@@ -209,14 +257,6 @@ export class ModulesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle edit action
-   */
-  private handleEdit(module: Module): void {
-    console.log('Edit module:', module);
-    // TODO: Open edit modal/form
-  }
-
-  /**
    * Handle delete action
    */
   private handleDelete(module: Module): void {
@@ -242,9 +282,103 @@ export class ModulesComponent implements OnInit, OnDestroy {
    * Handle create button click
    */
   onCreateClick(): void {
-    console.log('Create module clicked');
-    // TODO: Open create modal or navigate to create page
-    // Example: this.router.navigate(['/modules/create']);
-    // Or: this.openCreateModal();
+    this.currentEditModule = null;
+    this.formConfig = {
+      ...this.formConfig,
+      title: 'Create Module',
+      subtitle: 'Add a new module to organize your application features',
+      mode: 'create',
+      submitLabel: 'Create Module',
+      initialData: undefined,
+    };
+    this.isFormModalOpen = true;
+  }
+
+  /**
+   * Handle form submission (both create and update)
+   */
+  private handleFormSubmit(data: Partial<Module>): Observable<any> {
+    console.log('Form submit - mode:', this.formConfig.mode, 'currentEditModule:', this.currentEditModule);
+    if (this.formConfig.mode === 'update' && this.currentEditModule) {
+      console.log('Updating module:', this.currentEditModule.id, 'with data:', data);
+      return this.modulesService.updateModule(this.currentEditModule.id, data);
+    } else {
+      console.log('Creating module with data:', data);
+      return this.modulesService.createModule(data);
+    }
+  }
+
+  /**
+   * Handle edit action - fetches module data from API
+   */
+  private handleEdit(module: Module): void {
+    this.currentEditModule = module;
+    this.isLoadingEditData = true;
+    
+    // Set form config first to show loading state - preserve onSubmit handler
+    this.formConfig = {
+      ...this.formConfig,
+      title: 'Edit Module',
+      subtitle: 'Update module information',
+      mode: 'update',
+      submitLabel: 'Update Module',
+      initialData: undefined, // Will be set after API call
+      onSubmit: (data: Partial<Module>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
+    };
+    this.isFormModalOpen = true;
+
+    // Fetch module data from API
+    this.modulesService.getModuleById(module.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isLoadingEditData = false;
+          if (response.success && response.data) {
+            // Update form config with fetched data - preserve onSubmit handler
+            this.formConfig = {
+              ...this.formConfig,
+              initialData: {
+                name: response.data.name,
+              },
+              onSubmit: (data: Partial<Module>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
+            };
+          } else {
+            console.error('Failed to fetch module data:', response.message);
+            // TODO: Show error toast/notification
+            this.onFormModalClose();
+          }
+        },
+        error: (error) => {
+          this.isLoadingEditData = false;
+          console.error('Error fetching module data:', error);
+          // TODO: Show error toast/notification
+          this.onFormModalClose();
+        }
+      });
+  }
+
+  /**
+   * Handle form modal close
+   */
+  onFormModalClose(): void {
+    this.isFormModalOpen = false;
+    this.currentEditModule = null;
+    this.isLoadingEditData = false;
+  }
+
+  /**
+   * Handle form modal success
+   */
+  onFormModalSuccess(response: any): void {
+    this.loadModules();
+    // TODO: Show success toast
+  }
+
+  /**
+   * Handle form modal error
+   */
+  onFormModalError(error: any): void {
+    console.error('Form error:', error);
+    // TODO: Show error toast
   }
 }

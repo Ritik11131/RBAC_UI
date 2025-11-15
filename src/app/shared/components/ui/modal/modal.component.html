@@ -13,7 +13,7 @@
       [ngClass]="[
         'relative flex h-full flex-col transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 shadow-2xl',
         isOpen ? 'translate-x-0' : 'translate-x-full',
-        isFullscreen ? 'w-full' : 'w-full sm:w-[500px] md:w-[600px] lg:w-[700px]',
+        isFullscreen ? 'w-full' : widthClass,
         className
       ]"
       (click)="onContentClick($event)"

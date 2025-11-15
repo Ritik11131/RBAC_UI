@@ -17,3 +17,14 @@
   (createClick)="onCreateClick()"
 ></app-generic-data-table>
 
+<!-- Generic Form Modal -->
+@if (formConfig) {
+  <app-generic-form-modal
+    [isOpen]="isFormModalOpen"
+    [config]="formConfig"
+    (close)="onFormModalClose()"
+    (success)="onFormModalSuccess($event)"
+    (error)="onFormModalError($event)"
+  />
+}
+
