@@ -1,5 +1,5 @@
 <div class="bg-white border border-gray-200 dark:bg-white/[0.03] dark:border-gray-800 rounded-2xl">
-  @if (mergedConfig.title || mergedConfig.subtitle || mergedConfig.showCreateButton) {
+  @if (mergedConfig.title || mergedConfig.subtitle || mergedConfig.showCreateButton || mergedConfig.showEntityFilter) {
   <div class="px-6 py-5">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div class="flex-1">
@@ -10,26 +10,60 @@
           <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">{{ mergedConfig.subtitle }}</p>
         }
       </div>
-      @if (mergedConfig.showCreateButton) {
-        <div class="flex-shrink-0">
-          <app-button 
-            variant="primary" 
-            size="sm" 
-            (btnClick)="handleCreate()"
-            className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
-          >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="fill-current">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M10.0002 3.33301C10.4144 3.33301 10.7502 3.66879 10.7502 4.08301V9.24967H15.9168C16.331 9.24967 16.6668 9.58546 16.6668 9.99967C16.6668 10.4139 16.331 10.7497 15.9168 10.7497H10.7502V15.9163C10.7502 16.3305 10.4144 16.6663 10.0002 16.6663C9.58598 16.6663 9.25019 16.3305 9.25019 15.9163V10.7497H4.08352C3.66931 10.7497 3.33352 10.4139 3.33352 9.99967C3.33352 9.58546 3.66931 9.24967 4.08352 9.24967H9.25019V4.08301C9.25019 3.66879 9.58598 3.33301 10.0002 3.33301Z" fill="currentColor"></path>
-            </svg>
-            {{ mergedConfig.createButtonLabel || 'Create' }}
-          </app-button>
-        </div>
-      }
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        @if (mergedConfig.showEntityFilter) {
+          <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800">
+            <button
+              type="button"
+              (click)="onEntityFilterChange(true)"
+              [class.bg-white]="showAllEntities"
+              [class.text-brand-600]="showAllEntities"
+              [class.shadow-sm]="showAllEntities"
+              [class.text-gray-600]="!showAllEntities"
+              [class.dark:bg-gray-900]="showAllEntities"
+              [class.dark:text-brand-400]="showAllEntities"
+              [class.dark:text-gray-400]="!showAllEntities"
+              class="rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+            >
+              All (Hierarchical)
+            </button>
+            <button
+              type="button"
+              (click)="onEntityFilterChange(false)"
+              [class.bg-white]="!showAllEntities"
+              [class.text-brand-600]="!showAllEntities"
+              [class.shadow-sm]="!showAllEntities"
+              [class.text-gray-600]="showAllEntities"
+              [class.dark:bg-gray-900]="!showAllEntities"
+              [class.dark:text-brand-400]="!showAllEntities"
+              [class.dark:text-gray-400]="showAllEntities"
+              class="rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+            >
+              Current Entity Only
+            </button>
+          </div>
+        }
+        @if (mergedConfig.showCreateButton) {
+          <div class="flex-shrink-0">
+            <app-button 
+              variant="primary" 
+              size="sm" 
+              (btnClick)="handleCreate()"
+              className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+            >
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="fill-current">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M10.0002 3.33301C10.4144 3.33301 10.7502 3.66879 10.7502 4.08301V9.24967H15.9168C16.331 9.24967 16.6668 9.58546 16.6668 9.99967C16.6668 10.4139 16.331 10.7497 15.9168 10.7497H10.7502V15.9163C10.7502 16.3305 10.4144 16.6663 10.0002 16.6663C9.58598 16.6663 9.25019 16.3305 9.25019 15.9163V10.7497H4.08352C3.66931 10.7497 3.33352 10.4139 3.33352 9.99967C3.33352 9.58546 3.66931 9.24967 4.08352 9.24967H9.25019V4.08301C9.25019 3.66879 9.58598 3.33301 10.0002 3.33301Z" fill="currentColor"></path>
+              </svg>
+              {{ mergedConfig.createButtonLabel || 'Create' }}
+            </app-button>
+          </div>
+        }
+      </div>
     </div>
   </div>
   }
   
-  <div class="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6" [class.border-t-0]="!mergedConfig.title && !mergedConfig.subtitle && !mergedConfig.showCreateButton">
+  <div class="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6" [class.border-t-0]="!mergedConfig.title && !mergedConfig.subtitle && !mergedConfig.showCreateButton && !mergedConfig.showEntityFilter">
     <div class="space-y-6">
       <div class="overflow-hidden rounded-xl bg-white dark:bg-white/[0.03]">
         <!-- Table Controls -->

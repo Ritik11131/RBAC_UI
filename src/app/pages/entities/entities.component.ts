@@ -40,6 +40,9 @@ export class EntitiesComponent implements OnInit, OnDestroy {
   searchTerm = '';
   sortColumn: string | null = null;
   sortOrder: 'asc' | 'desc' | null = null;
+  
+  // Entity filter state (from table component)
+  currentEntityFilter: { showAll: boolean; entityId: string | null } = { showAll: true, entityId: null };
 
   // Form modal state
   isFormModalOpen = false;
@@ -104,6 +107,8 @@ export class EntitiesComponent implements OnInit, OnDestroy {
     enableSorting: true,
     enableSelection: true,
     useDropdownMenu: true,
+    showEntityFilter: true,
+    entityFilterDefault: 'all',
   };
 
   // Action buttons
@@ -264,6 +269,13 @@ export class EntitiesComponent implements OnInit, OnDestroy {
     if (this.sortColumn && this.sortOrder) {
       params.sortBy = this.sortColumn;
       params.sortOrder = this.sortOrder;
+    }
+
+    // Entity filtering: table component handles entityId logic automatically
+    // If showAll is false, table emits logged-in user's entityId
+    // If showAll is true, table emits null, so we don't pass entityId to API
+    if (!this.currentEntityFilter.showAll && this.currentEntityFilter.entityId) {
+      params.entityId = this.currentEntityFilter.entityId;
     }
 
     this.entitiesService.getEntities(params)
@@ -716,5 +728,14 @@ export class EntitiesComponent implements OnInit, OnDestroy {
       console.error('Error loading profile options:', error);
       return { options: [], hasMore: false };
     }
+  }
+
+  /**
+   * Handle entity filter change from table
+   */
+  onEntityFilterChange(event: { showAll: boolean; entityId: string | null }): void {
+    this.currentEntityFilter = event;
+    this.currentPage = 1; // Reset to first page
+    this.loadEntities();
   }
 }

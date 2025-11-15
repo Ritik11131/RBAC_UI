@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy, TrackByFunction } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy, TrackByFunction, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BadgeComponent } from '../../ui/badge/badge.component';
 import { ButtonComponent } from '../../ui/button/button.component';
@@ -9,6 +9,7 @@ import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdo
 import { SpinnerComponent } from '../../common/spinner/spinner.component';
 import { TableCellValuePipe } from '../../../pipe/table-cell-value.pipe';
 import { TablePageNumbersPipe } from '../../../pipe/table-page-numbers.pipe';
+import { AuthService } from '../../../../core/services/auth.service';
 
 
 export type ColumnType = 'text' | 'badge' | 'custom' | 'checkbox';
@@ -53,6 +54,8 @@ export interface TableConfig {
   enableSorting?: boolean;
   enableSelection?: boolean;
   useDropdownMenu?: boolean; // Use dropdown menu for actions instead of direct buttons
+  showEntityFilter?: boolean; // Show entity filter toggle (All vs Current Entity Only)
+  entityFilterDefault?: 'all' | 'current'; // Default entity filter mode (default: 'all')
 }
 
 @Component({
@@ -74,6 +77,9 @@ export interface TableConfig {
   styles: ``
 })
 export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
+  // Services
+  private authService = inject(AuthService);
+
   // Inputs
   @Input() data: T[] = [];
   @Input() columns: TableColumn<T>[] = [];
@@ -93,6 +99,7 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
   @Output() downloadClick = new EventEmitter<void>();
   @Output() actionClick = new EventEmitter<{ action: string; item: T }>();
   @Output() createClick = new EventEmitter<void>();
+  @Output() entityFilterChange = new EventEmitter<{ showAll: boolean; entityId: string | null }>();
 
   // Internal state
   searchTerm = '';
@@ -102,6 +109,7 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
   selectAll = false;
   sortColumn: string | null = null;
   sortDirection: SortDirection = null;
+  showAllEntities = true; // Entity filter state
 
   // Default config
   private defaultConfig: TableConfig = {
@@ -119,6 +127,8 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     enableSorting: true,
     enableSelection: true,
     useDropdownMenu: false, // Default to direct buttons
+    showEntityFilter: false, // Default to hidden
+    entityFilterDefault: 'all', // Default to hierarchical view
   };
 
   mergedConfig: TableConfig = {};
@@ -126,11 +136,17 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
   ngOnInit() {
     this.mergedConfig = { ...this.defaultConfig, ...this.config };
     this.itemsPerPage = this.mergedConfig.defaultItemsPerPage || 5;
+    // Initialize entity filter state
+    this.showAllEntities = this.mergedConfig.entityFilterDefault === 'all';
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['config']) {
       this.mergedConfig = { ...this.defaultConfig, ...this.config };
+      // Update entity filter state if config changes
+      if (this.mergedConfig.entityFilterDefault) {
+        this.showAllEntities = this.mergedConfig.entityFilterDefault === 'all';
+      }
     }
     if (changes['data'] && !this.serverSidePagination) {
       this.currentPage = 1;
@@ -356,6 +372,28 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
 
   handleCreate() {
     this.createClick.emit();
+  }
+
+  /**
+   * Handle entity filter change
+   * When showAll is false, automatically use logged-in user's entityId
+   */
+  onEntityFilterChange(showAll: boolean): void {
+    this.showAllEntities = showAll;
+    this.currentPage = 1; // Reset to first page
+    
+    // If showing all (hierarchical), emit null entityId
+    // If showing current entity only, emit logged-in user's entityId
+    const entityId = showAll ? null : this.getLoggedInEntityId();
+    this.entityFilterChange.emit({ showAll, entityId });
+  }
+
+  /**
+   * Get logged-in user's entity ID
+   */
+  private getLoggedInEntityId(): string | null {
+    const user = this.authService.getCurrentUser();
+    return user?.entity_id || null;
   }
 
   hasActions(): boolean {

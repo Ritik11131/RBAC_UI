@@ -43,6 +43,9 @@ export class RolesComponent implements OnInit, OnDestroy {
   searchTerm = '';
   sortColumn: string | null = null;
   sortOrder: 'asc' | 'desc' | null = null;
+  
+  // Entity filter state (from table component)
+  currentEntityFilter: { showAll: boolean; entityId: string | null } = { showAll: true, entityId: null };
 
   // Form modal state
   isFormModalOpen = false;
@@ -109,6 +112,8 @@ export class RolesComponent implements OnInit, OnDestroy {
     enableSorting: true,
     enableSelection: true,
     useDropdownMenu: true,
+    showEntityFilter: true,
+    entityFilterDefault: 'all',
   };
 
   // Action buttons
@@ -296,6 +301,13 @@ export class RolesComponent implements OnInit, OnDestroy {
     if (this.sortColumn && this.sortOrder) {
       params.sortBy = this.sortColumn;
       params.sortOrder = this.sortOrder;
+    }
+
+    // Entity filtering: table component handles entityId logic automatically
+    // If showAll is false, table emits logged-in user's entityId
+    // If showAll is true, table emits null, so we don't pass entityId to API
+    if (!this.currentEntityFilter.showAll && this.currentEntityFilter.entityId) {
+      params.entityId = this.currentEntityFilter.entityId;
     }
 
     this.rolesService.getRoles(params)
@@ -496,5 +508,14 @@ export class RolesComponent implements OnInit, OnDestroy {
   onFormModalError(error: any): void {
     console.error('Form error:', error);
     // TODO: Show error toast
+  }
+
+  /**
+   * Handle entity filter change from table
+   */
+  onEntityFilterChange(event: { showAll: boolean; entityId: string | null }): void {
+    this.currentEntityFilter = event;
+    this.currentPage = 1; // Reset to first page
+    this.loadRoles();
   }
 }

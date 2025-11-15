@@ -46,11 +46,13 @@ export class RolesService {
       httpParams = httpParams.set('sortOrder', params.sortOrder);
     }
     
-    // Always include logged-in user's entityId
-    const loggedInEntityId = params.entityId || this.getLoggedInEntityId();
-    if (loggedInEntityId) {
-      httpParams = httpParams.set('entityId', loggedInEntityId);
+    // Include entityId only if explicitly provided
+    // If entityId is undefined/null, API will return hierarchical data (all children)
+    // If entityId is provided, API will return only that entity's data
+    if (params.entityId !== undefined && params.entityId !== null) {
+      httpParams = httpParams.set('entityId', params.entityId);
     }
+    // Note: If entityId is not provided, API returns hierarchical view (logged-in user + all descendants)
 
     return this.http.get<PaginatedRolesResponse>(this.apiUrl, { params: httpParams }).pipe(
       catchError((error) => {
