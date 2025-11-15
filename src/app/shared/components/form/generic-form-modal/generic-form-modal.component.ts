@@ -301,9 +301,23 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
         validators
       ];
 
-      // Pre-compute grid class
+      // Pre-compute grid class - use explicit mapping to ensure Tailwind includes the classes
       const cols = field.gridCols || 12;
-      this.fieldGridClasses.set(field.key, `sm:col-span-${cols}`);
+      const gridClassMap: { [key: number]: string } = {
+        1: 'sm:col-span-1',
+        2: 'sm:col-span-2',
+        3: 'sm:col-span-3',
+        4: 'sm:col-span-4',
+        5: 'sm:col-span-5',
+        6: 'sm:col-span-6',
+        7: 'sm:col-span-7',
+        8: 'sm:col-span-8',
+        9: 'sm:col-span-9',
+        10: 'sm:col-span-10',
+        11: 'sm:col-span-11',
+        12: 'sm:col-span-12',
+      };
+      this.fieldGridClasses.set(field.key, gridClassMap[cols] || 'sm:col-span-12');
     });
 
     this.form = this.fb.group(formControls);

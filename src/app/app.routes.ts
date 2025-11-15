@@ -21,7 +21,7 @@ import { CalenderComponent } from './pages/calender/calender.component';
 import { ModulesComponent } from './pages/modules/modules.component';
 import { EntitiesComponent } from './pages/entities/entities.component';
 import { RolesComponent } from './pages/roles/roles.component';
-import { UserComponent } from './pages/user/user.component';
+import { UsersComponent } from './pages/users/users.component';
 import { MeterComponent } from './pages/meter/meter.component';
 import { ProfilesComponent } from './pages/profiles/profiles.component';
 
@@ -66,8 +66,8 @@ export const routes: Routes = [
         title:'Roles | RBAC System'
       },
       {
-        path:'user',
-        component:UserComponent,
+        path:'users',
+        component:UsersComponent,
         title:'Users | RBAC System'
       },
       {

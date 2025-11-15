@@ -3,12 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, Observable, firstValueFrom } from 'rxjs';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { GenericDataTableComponent, TableColumn, TableAction, TableConfig } from '../../shared/components/tables/generic-data-table/generic-data-table.component';
-import { RolesService } from '../../core/services/roles.service';
+import { UsersService } from '../../core/services/users.service';
 import { EntitiesService } from '../../core/services/entities.service';
-import { ModulesService } from '../../core/services/modules.service';
-import { Role, RolePaginationParams, RolePayload, Permission } from '../../core/interfaces/role.interface';
-import { Entity } from '../../core/interfaces/entity.interface';
-import { Module } from '../../core/interfaces/module.interface';
+import { RolesService } from '../../core/services/roles.service';
+import { User, UserPaginationParams, UserCreatePayload, UserUpdatePayload } from '../../core/interfaces/user.interface';
 import { formatDateMedium } from '../../shared/utils/date.util';
 import { GenericFormModalComponent } from '../../shared/components/form/generic-form-modal/generic-form-modal.component';
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
@@ -16,25 +14,25 @@ import { Validators } from '@angular/forms';
 import { createEntityIdField } from '../../shared/utils/form-field-helpers';
 
 @Component({
-  selector: 'app-roles',
+  selector: 'app-users',
   imports: [
     CommonModule,
     PageBreadcrumbComponent,
     GenericDataTableComponent,
     GenericFormModalComponent,
   ],
-  templateUrl: './roles.component.html',
-  styleUrl: './roles.component.css'
+  templateUrl: './users.component.html',
+  styleUrl: './users.component.css'
 })
-export class RolesComponent implements OnInit, OnDestroy {
-  private rolesService = inject(RolesService);
+export class UsersComponent implements OnInit, OnDestroy {
+  private usersService = inject(UsersService);
   private entitiesService = inject(EntitiesService);
-  private modulesService = inject(ModulesService);
+  private rolesService = inject(RolesService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
   // Component state
-  rolesData: Role[] = [];
+  usersData: User[] = [];
   isLoading = false;
   currentPage = 1;
   itemsPerPage = 10;
@@ -46,36 +44,49 @@ export class RolesComponent implements OnInit, OnDestroy {
 
   // Form modal state
   isFormModalOpen = false;
-  formConfig!: GenericFormConfig<RolePayload>;
-  currentEditRole: Role | null = null;
+  formConfig!: GenericFormConfig<UserCreatePayload | UserUpdatePayload>;
+  currentEditUser: User | null = null;
   isLoadingEditData = false;
 
-  // Available modules and entities for form
-  availableModules: Module[] = [];
-  availableEntities: Entity[] = [];
-
   // Table column definitions
-  columns: TableColumn<Role>[] = [
+  columns: TableColumn<User>[] = [
     {
       key: 'name',
-      label: 'Role Name',
+      label: 'User',
+      sortable: true,
+      searchable: true,
+      type: 'custom',
+      render: (item) => `
+        <div>
+          <p class="block font-medium text-gray-800 text-theme-sm dark:text-white/90">${item.name || 'N/A'}</p>
+          <span class="text-sm font-normal text-gray-500 dark:text-gray-400">${item.email}</span>
+        </div>
+      `,
+      allowWrap: true,
+      width: '300px',
+    },
+    {
+      key: 'mobile_no',
+      label: 'Mobile',
       sortable: true,
       searchable: true,
     },
     {
-      key: 'entityId',
-      label: 'Entity ID',
+      key: 'role_id',
+      label: 'Role ID',
       sortable: true,
       searchable: true,
     },
     {
-      key: 'permissions',
-      label: 'Permissions',
-      sortable: false,
-      render: (item) => {
-        const count = item.permissions?.length || 0;
-        return `${count} permission${count !== 1 ? 's' : ''}`;
+      key: 'is_active',
+      label: 'Status',
+      type: 'badge',
+      sortable: true,
+      badgeColor: (item) => {
+        if (item.is_active === false) return 'error';
+        return 'success';
       },
+      render: (item) => item.is_active !== false ? 'Active' : 'Inactive',
     },
     {
       key: 'creation_time',
@@ -83,36 +94,30 @@ export class RolesComponent implements OnInit, OnDestroy {
       sortable: true,
       render: (item) => item.creation_time ? formatDateMedium(item.creation_time) : 'N/A',
     },
-    {
-      key: 'last_update_on',
-      label: 'Last Updated',
-      sortable: true,
-      render: (item) => item.last_update_on ? formatDateMedium(item.last_update_on) : 'N/A',
-    },
   ];
 
   // Table configuration
   config: TableConfig = {
-    title: 'Roles',
-    subtitle: 'Manage and configure system roles. Create, edit, or delete roles to control access permissions.',
+    title: 'Users',
+    subtitle: 'Manage system users. Create, edit, or delete user accounts and assign roles.',
     showSearch: true,
     showPagination: true,
     showItemsPerPage: true,
     showSelectAll: true,
     showDownload: false,
     showCreateButton: true,
-    createButtonLabel: 'Create Role',
-    searchPlaceholder: 'Search roles...',
+    createButtonLabel: 'Create User',
+    searchPlaceholder: 'Search users...',
     itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
-    emptyMessage: 'No roles found',
+    emptyMessage: 'No users found',
     enableSorting: true,
     enableSelection: true,
     useDropdownMenu: true,
   };
 
   // Action buttons
-  actions: TableAction<Role>[] = [
+  actions: TableAction<User>[] = [
     {
       label: 'Edit',
       variant: 'default',
@@ -136,47 +141,13 @@ export class RolesComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    this.loadRoles();
+    this.loadUsers();
     this.setupSearchDebounce();
-    this.loadModulesAndEntities();
     this.initializeFormConfig();
   }
 
   /**
-   * Load modules and entities for form dropdowns
-   */
-  private loadModulesAndEntities(): void {
-    // Load modules
-    this.modulesService.getModules({ limit: 100 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.availableModules = response.data;
-          }
-        },
-        error: (error) => {
-          console.error('Error loading modules:', error);
-        }
-      });
-
-    // Load entities
-    this.entitiesService.getEntities({ limit: 100 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.availableEntities = response.data;
-          }
-        },
-        error: (error) => {
-          console.error('Error loading entities:', error);
-        }
-      });
-  }
-
-  /**
-   * Initialize form configuration for roles
+   * Initialize form configuration for users
    */
   private initializeFormConfig(): void {
     const fields: FormFieldConfig[] = [
@@ -186,38 +157,91 @@ export class RolesComponent implements OnInit, OnDestroy {
           return this.loadEntityOptions(page, limit, search);
         },
         () => {
-          // Entity creation from role form - could be handled if needed
-          console.warn('Entity creation from role form');
+          // Entity creation from user form - could be handled if needed
+          console.warn('Entity creation from user form');
         }
       ),
       {
+        key: 'email',
+        label: 'Email',
+        type: 'email',
+        placeholder: 'Enter email address',
+        required: true,
+        validators: [Validators.required, Validators.email],
+        gridCols: 12,
+        order: 2,
+        hint: 'Enter a valid email address',
+      },
+      {
+        key: 'password',
+        label: 'Password',
+        type: 'password',
+        placeholder: 'Enter password',
+        required: false, // Not required for update
+        validators: [Validators.minLength(6)],
+        gridCols: 12,
+        order: 3,
+        hint: 'Minimum 6 characters (required for new users)',
+      },
+      {
         key: 'name',
-        label: 'Role Name',
+        label: 'Name',
         type: 'text',
-        placeholder: 'Enter role name',
+        placeholder: 'Enter full name',
         required: true,
         validators: [Validators.required, Validators.minLength(2)],
         gridCols: 12,
-        order: 2,
-        hint: 'Enter a unique name for the role',
+        order: 4,
+        hint: 'Enter the user\'s full name',
+      },
+      {
+        key: 'mobile_no',
+        label: 'Mobile Number',
+        type: 'tel',
+        placeholder: 'Enter mobile number',
+        required: false,
+        validators: [Validators.pattern(/^[0-9]{10}$/)],
+        gridCols: 12,
+        order: 5,
+        hint: 'Enter a 10-digit mobile number',
+      },
+      {
+        key: 'role_id',
+        label: 'Role',
+        type: 'paginated-select',
+        placeholder: 'Select a role',
+        required: true,
+        validators: [Validators.required],
+        gridCols: 12,
+        order: 6,
+        hint: 'Select a role for this user',
+        paginatedSelectConfig: {
+          loadOptions: async (page: number, limit: number, search?: string) => {
+            return this.loadRoleOptions(page, limit, search);
+          },
+          searchPlaceholder: 'Search roles...',
+          itemsPerPage: 10,
+          showSearch: true,
+          allowCreate: false,
+        },
       },
     ];
 
     this.formConfig = {
-      title: 'Create Role',
-      subtitle: 'Add a new role with permissions',
+      title: 'Create User',
+      subtitle: 'Add a new user to the system',
       fields,
-      submitLabel: 'Create Role',
+      submitLabel: 'Create User',
       cancelLabel: 'Cancel',
       mode: 'create',
       modalWidth: 'w-full sm:w-[500px] md:w-[600px]',
-      onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data),
+      onSubmit: (data: Partial<UserCreatePayload | UserUpdatePayload>) => this.handleFormSubmit(data),
       onSuccess: (response) => {
-        console.log('Role created successfully:', response);
-        this.loadRoles();
+        console.log('User created successfully:', response);
+        this.loadUsers();
       },
       onError: (error) => {
-        console.error('Error creating role:', error);
+        console.error('Error creating user:', error);
       },
     };
   }
@@ -257,6 +281,41 @@ export class RolesComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Load role options with pagination
+   */
+  private async loadRoleOptions(page: number, limit: number, search?: string): Promise<{
+    options: { value: string; label: string; disabled?: boolean }[];
+    hasMore: boolean;
+    total?: number;
+  }> {
+    try {
+      const response = await firstValueFrom(this.rolesService.getRoles({
+        page,
+        limit,
+        search,
+      }));
+
+      if (response && response.data) {
+        const options = response.data.map(role => ({
+          value: role.id,
+          label: role.name,
+        }));
+
+        return {
+          options,
+          hasMore: response.pagination.hasNextPage,
+          total: response.pagination.total,
+        };
+      }
+
+      return { options: [], hasMore: false };
+    } catch (error) {
+      console.error('Error loading role options:', error);
+      return { options: [], hasMore: false };
+    }
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -274,17 +333,17 @@ export class RolesComponent implements OnInit, OnDestroy {
     ).subscribe(searchTerm => {
       this.searchTerm = searchTerm;
       this.currentPage = 1; // Reset to first page on search
-      this.loadRoles();
+      this.loadUsers();
     });
   }
 
   /**
-   * Load roles from API
+   * Load users from API
    */
-  loadRoles(): void {
+  loadUsers(): void {
     this.isLoading = true;
 
-    const params: RolePaginationParams = {
+    const params: UserPaginationParams = {
       page: this.currentPage,
       limit: this.itemsPerPage,
     };
@@ -298,17 +357,17 @@ export class RolesComponent implements OnInit, OnDestroy {
       params.sortOrder = this.sortOrder;
     }
 
-    this.rolesService.getRoles(params)
+    this.usersService.getUsers(params)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.rolesData = response.data;
+          this.usersData = response.data;
           this.totalRecords = response.pagination.total;
           this.totalPages = response.pagination.totalPages;
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error loading roles:', error);
+          console.error('Error loading users:', error);
           this.isLoading = false;
           // TODO: Show error toast/notification
         }
@@ -318,32 +377,32 @@ export class RolesComponent implements OnInit, OnDestroy {
   // Event handlers
   onPageChange(page: number): void {
     this.currentPage = page;
-    this.loadRoles();
+    this.loadUsers();
   }
 
   onItemsPerPageChange(itemsPerPage: number): void {
     this.itemsPerPage = itemsPerPage;
     this.currentPage = 1; // Reset to first page
-    this.loadRoles();
+    this.loadUsers();
   }
 
   onSortChange(sort: { column: string; direction: 'asc' | 'desc' | null }): void {
     this.sortColumn = sort.column;
     this.sortOrder = sort.direction;
     this.currentPage = 1; // Reset to first page on sort
-    this.loadRoles();
+    this.loadUsers();
   }
 
   onSearchChange(searchTerm: string): void {
     this.searchSubject.next(searchTerm);
   }
 
-  onSelectionChange(selected: Role[]): void {
+  onSelectionChange(selected: User[]): void {
     console.log('Selection changed:', selected);
     // TODO: Handle bulk actions
   }
 
-  onActionClick(event: { action: string; item: Role }): void {
+  onActionClick(event: { action: string; item: User }): void {
     const { action, item } = event;
     
     switch (action) {
@@ -361,18 +420,18 @@ export class RolesComponent implements OnInit, OnDestroy {
   /**
    * Handle delete action
    */
-  private handleDelete(role: Role): void {
-    if (confirm(`Are you sure you want to delete "${role.name}"?`)) {
+  private handleDelete(user: User): void {
+    if (confirm(`Are you sure you want to delete "${user.name || user.email}"?`)) {
       this.isLoading = true;
-      this.rolesService.deleteRole(role.id)
+      this.usersService.deleteUser(user.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.loadRoles(); // Reload list
+            this.loadUsers(); // Reload list
             // TODO: Show success toast
           },
           error: (error) => {
-            console.error('Error deleting role:', error);
+            console.error('Error deleting user:', error);
             this.isLoading = false;
             // TODO: Show error toast
           }
@@ -384,14 +443,26 @@ export class RolesComponent implements OnInit, OnDestroy {
    * Handle create button click
    */
   onCreateClick(): void {
-    this.currentEditRole = null;
+    this.currentEditUser = null;
+    // Update form config for create mode
     this.formConfig = {
       ...this.formConfig,
-      title: 'Create Role',
-      subtitle: 'Add a new role with permissions',
+      title: 'Create User',
+      subtitle: 'Add a new user to the system',
       mode: 'create',
-      submitLabel: 'Create Role',
+      submitLabel: 'Create User',
       initialData: undefined,
+      fields: this.formConfig.fields.map(field => {
+        // Make password required for create
+        if (field.key === 'password') {
+          return {
+            ...field,
+            required: true,
+            validators: [Validators.required, Validators.minLength(6)],
+          };
+        }
+        return field;
+      }),
     };
     this.isFormModalOpen = true;
   }
@@ -399,74 +470,104 @@ export class RolesComponent implements OnInit, OnDestroy {
   /**
    * Handle form submission (both create and update)
    */
-  private handleFormSubmit(data: Partial<RolePayload>): Observable<any> {
-    console.log('Form submit - mode:', this.formConfig.mode, 'currentEditRole:', this.currentEditRole);
+  private handleFormSubmit(data: Partial<UserCreatePayload | UserUpdatePayload>): Observable<any> {
+    console.log('Form submit - mode:', this.formConfig.mode, 'currentEditUser:', this.currentEditUser);
     
-    // Prepare payload
-    // TODO: Add permissions UI component to handle permissions array
-    // For now, using empty permissions array - will be enhanced later
-    const payload: RolePayload = {
-      name: data.name || '',
-      entityId: data.entityId || '',
-      permissions: [], // TODO: Get from permissions selector component
-    };
-
-    if (this.formConfig.mode === 'update' && this.currentEditRole) {
-      console.log('Updating role:', this.currentEditRole.id, 'with data:', payload);
-      return this.rolesService.updateRole(this.currentEditRole.id, payload);
+    if (this.formConfig.mode === 'update' && this.currentEditUser) {
+      // Update mode - password is optional, email is not updatable
+      const payload: UserUpdatePayload = {
+        name: data.name,
+        mobile_no: data.mobile_no,
+        entity_id: data.entity_id,
+        role_id: data.role_id,
+        // is_active can be added later if needed
+      };
+      console.log('Updating user:', this.currentEditUser.id, 'with data:', payload);
+      return this.usersService.updateUser(this.currentEditUser.id, payload);
     } else {
-      console.log('Creating role with data:', payload);
-      return this.rolesService.createRole(payload);
+      // Create mode - password and email are required
+      const createData = data as Partial<UserCreatePayload>;
+      if (!createData.password) {
+        throw new Error('Password is required for new users');
+      }
+      if (!createData.email) {
+        throw new Error('Email is required for new users');
+      }
+      const payload: UserCreatePayload = {
+        email: createData.email,
+        password: createData.password,
+        name: createData.name || '',
+        mobile_no: createData.mobile_no,
+        entity_id: createData.entity_id || '',
+        role_id: createData.role_id || '',
+      };
+      console.log('Creating user with data:', payload);
+      return this.usersService.createUser(payload);
     }
   }
 
   /**
-   * Handle edit action - fetches role data from API
+   * Handle edit action - fetches user data from API
    */
-  private handleEdit(role: Role): void {
-    this.currentEditRole = role;
+  private handleEdit(user: User): void {
+    this.currentEditUser = user;
     this.isLoadingEditData = true;
     
     // Set form config first to show loading state - preserve onSubmit handler
+    // Update form config for update mode - password not required
     this.formConfig = {
       ...this.formConfig,
-      title: 'Edit Role',
-      subtitle: 'Update role information and permissions',
+      title: 'Edit User',
+      subtitle: 'Update user information',
       mode: 'update',
-      submitLabel: 'Update Role',
+      submitLabel: 'Update User',
       initialData: undefined, // Will be set after API call
-      onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
+      onSubmit: (data: Partial<UserCreatePayload | UserUpdatePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
+      fields: this.formConfig.fields.map(field => {
+        // Make password optional for update
+        if (field.key === 'password') {
+          return {
+            ...field,
+            required: false,
+            validators: [Validators.minLength(6)], // Remove required validator
+            hint: 'Leave blank to keep current password',
+          };
+        }
+        return field;
+      }),
     };
     this.isFormModalOpen = true;
 
-    // Fetch role data from API
-    this.rolesService.getRoleById(role.id)
+    // Fetch user data from API
+    this.usersService.getUserById(user.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.isLoadingEditData = false;
           if (response.success && response.data) {
-            const roleData = response.data;
+            const userData = response.data;
             // Update form config with fetched data - preserve onSubmit handler
-            // Note: Permissions will be handled separately in a future enhancement
             this.formConfig = {
               ...this.formConfig,
               initialData: {
-                name: roleData.name,
-                entityId: roleData.entityId,
-                // permissions: roleData.permissions || [], // TODO: Handle permissions separately
+                email: userData.email,
+                name: userData.name,
+                mobile_no: userData.mobile_no,
+                entity_id: userData.entity_id,
+                role_id: userData.role_id,
+                // Don't include password in initial data
               } as any,
-              onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
+              onSubmit: (data: Partial<UserCreatePayload | UserUpdatePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
             };
           } else {
-            console.error('Failed to fetch role data:', response.message);
+            console.error('Failed to fetch user data:', response.message);
             // TODO: Show error toast/notification
             this.onFormModalClose();
           }
         },
         error: (error) => {
           this.isLoadingEditData = false;
-          console.error('Error fetching role data:', error);
+          console.error('Error fetching user data:', error);
           // TODO: Show error toast/notification
           this.onFormModalClose();
         }
@@ -478,7 +579,7 @@ export class RolesComponent implements OnInit, OnDestroy {
    */
   onFormModalClose(): void {
     this.isFormModalOpen = false;
-    this.currentEditRole = null;
+    this.currentEditUser = null;
     this.isLoadingEditData = false;
   }
 
@@ -486,7 +587,7 @@ export class RolesComponent implements OnInit, OnDestroy {
    * Handle form modal success
    */
   onFormModalSuccess(response: any): void {
-    this.loadRoles();
+    this.loadUsers();
     // TODO: Show success toast
   }
 
@@ -498,3 +599,4 @@ export class RolesComponent implements OnInit, OnDestroy {
     // TODO: Show error toast
   }
 }
+

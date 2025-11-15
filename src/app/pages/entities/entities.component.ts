@@ -11,6 +11,7 @@ import { formatDateMedium } from '../../shared/utils/date.util';
 import { GenericFormModalComponent } from '../../shared/components/form/generic-form-modal/generic-form-modal.component';
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
+import { createProfileIdField, createEntityIdField } from '../../shared/utils/form-field-helpers';
 
 @Component({
   selector: 'app-entities',
@@ -141,6 +142,15 @@ export class EntitiesComponent implements OnInit, OnDestroy {
    */
   private initializeFormConfig(): void {
     const fields: FormFieldConfig[] = [
+      // Profile selection at the top (required)
+      createProfileIdField(
+        async (page: number, limit: number, search?: string) => {
+          return this.loadProfileOptions(page, limit, search);
+        },
+        () => {
+          this.openProfileCreationModal();
+        }
+      ),
       {
         key: 'name',
         label: 'Entity Name',
@@ -149,7 +159,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
         required: true,
         validators: [Validators.required, Validators.minLength(2)],
         gridCols: 12,
-        order: 1,
+        order: 2,
         hint: 'Enter a unique name for the entity',
       },
       {
@@ -160,7 +170,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
         required: false,
         validators: [Validators.email],
         gridCols: 12,
-        order: 2,
+        order: 3,
         hint: 'Enter a valid email address',
       },
       {
@@ -171,32 +181,8 @@ export class EntitiesComponent implements OnInit, OnDestroy {
         required: false,
         validators: [Validators.pattern(/^[0-9]{10}$/)],
         gridCols: 12,
-        order: 3,
-        hint: 'Enter a 10-digit mobile number',
-      },
-      {
-        key: 'profile_id',
-        label: 'Profile',
-        type: 'paginated-select',
-        placeholder: 'Select a profile',
-        required: false,
-        gridCols: 12,
         order: 4,
-        hint: 'Select an existing profile or create a new one',
-        paginatedSelectConfig: {
-          loadOptions: async (page: number, limit: number, search?: string) => {
-            return this.loadProfileOptions(page, limit, search);
-          },
-          searchPlaceholder: 'Search profiles...',
-          itemsPerPage: 10,
-          showSearch: true,
-          allowCreate: true,
-          createLabel: 'Create New Profile',
-          createValue: '__create_new__',
-          onCreateClick: () => {
-            this.openProfileCreationModal();
-          },
-        },
+        hint: 'Enter a 10-digit mobile number',
       },
       {
         key: 'type',
@@ -227,7 +213,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
       submitLabel: 'Create Entity',
       cancelLabel: 'Cancel',
       mode: 'create',
-      modalWidth: 'w-full sm:w-[500px] md:w-[600px]',
+      modalWidth: 'w-full sm:w-[400px] md:w-[500px]',
       onSubmit: (data: Partial<EntityPayload>) => this.handleFormSubmit(data),
       onSuccess: (response) => {
         console.log('Entity created successfully:', response);
@@ -509,6 +495,17 @@ export class EntitiesComponent implements OnInit, OnDestroy {
    */
   private initializeProfileFormConfig(): void {
     const fields: FormFieldConfig[] = [
+      // Entity selection at the top (required)
+      createEntityIdField(
+        async (page: number, limit: number, search?: string) => {
+          return this.loadEntityOptionsForProfile(page, limit, search);
+        },
+        () => {
+          // Note: This would open entity modal, but we're already in entity form context
+          // So we might want to handle this differently or just show a message
+          console.warn('Cannot create entity from profile form when already in entity form');
+        }
+      ),
       {
         key: 'name',
         label: 'Profile Name',
@@ -517,35 +514,8 @@ export class EntitiesComponent implements OnInit, OnDestroy {
         required: true,
         validators: [Validators.required, Validators.minLength(2)],
         gridCols: 12,
-        order: 1,
-        hint: 'Enter a unique name for the profile',
-      },
-      {
-        key: 'entity_id',
-        label: 'Entity',
-        type: 'paginated-select',
-        placeholder: 'Select an entity',
-        required: true,
-        validators: [Validators.required],
-        gridCols: 12,
         order: 2,
-        hint: 'Select an existing entity or create a new one',
-        paginatedSelectConfig: {
-          loadOptions: async (page: number, limit: number, search?: string) => {
-            return this.loadEntityOptionsForProfile(page, limit, search);
-          },
-          searchPlaceholder: 'Search entities...',
-          itemsPerPage: 10,
-          showSearch: true,
-          allowCreate: true,
-          createLabel: 'Create New Entity',
-          createValue: '__create_new__',
-          onCreateClick: () => {
-            // Note: This would open entity modal, but we're already in entity form context
-            // So we might want to handle this differently or just show a message
-            console.warn('Cannot create entity from profile form when already in entity form');
-          },
-        },
+        hint: 'Enter a unique name for the profile',
       },
       {
         key: 'description',
