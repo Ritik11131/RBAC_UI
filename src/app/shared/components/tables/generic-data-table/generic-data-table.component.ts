@@ -25,6 +25,7 @@ export interface TableColumn<T = any> {
   render?: (item: T) => string;
   badgeColor?: (item: T) => 'success' | 'warning' | 'error' | 'info';
   customTemplate?: boolean; // For ng-template usage
+  allowWrap?: boolean; // Allow text wrapping (default: false, uses whitespace-nowrap)
 }
 
 export interface TableAction<T = any> {

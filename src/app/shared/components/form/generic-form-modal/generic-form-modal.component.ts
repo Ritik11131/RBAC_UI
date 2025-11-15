@@ -6,7 +6,8 @@ import { ModalComponent } from '../../ui/modal/modal.component';
 import { LabelComponent } from '../label/label.component';
 import { ButtonComponent } from '../../ui/button/button.component';
 import { SpinnerComponent } from '../../common/spinner/spinner.component';
-import { FormFieldConfig, GenericFormConfig } from '../../../../core/interfaces/form-config.interface';
+import { PaginatedSelectComponent } from '../paginated-select/paginated-select.component';
+import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../../../../core/interfaces/form-config.interface';
 
 @Component({
   selector: 'app-generic-form-modal',
@@ -17,6 +18,7 @@ import { FormFieldConfig, GenericFormConfig } from '../../../../core/interfaces/
     LabelComponent,
     ButtonComponent,
     SpinnerComponent,
+    PaginatedSelectComponent,
   ],
   template: `
     <app-modal
@@ -87,6 +89,23 @@ import { FormFieldConfig, GenericFormConfig } from '../../../../core/interfaces/
                           </option>
                         }
                       </select>
+                      @if (field.hint && !fieldErrors.get(field.key)) {
+                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>
+                      }
+                      @if (fieldErrors.get(field.key)) {
+                        <p class="mt-1.5 text-xs text-error-500">{{ fieldErrors.get(field.key) }}</p>
+                      }
+                    }
+                    @case ('paginated-select') {
+                      <app-paginated-select
+                        [config]="getPaginatedSelectConfig(field)"
+                        [value]="form.get(field.key)?.value"
+                        [disabled]="field.disabled || isLoading"
+                        [error]="!!fieldErrors.get(field.key)"
+                        [placeholder]="field.placeholder || 'Select an option'"
+                        (valueChange)="onPaginatedSelectChange(field.key, $event)"
+                        (createClick)="onPaginatedSelectCreate(field)"
+                      />
                       @if (field.hint && !fieldErrors.get(field.key)) {
                         <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>
                       }
@@ -210,12 +229,32 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['config'] && this.config && !changes['config'].firstChange) {
-      this.buildForm();
+    if (changes['config'] && this.config) {
+      if (!changes['config'].firstChange) {
+        // If form already exists and only initialData changed, patch values instead of rebuilding
+        if (this.form && changes['config'].previousValue && 
+            JSON.stringify(changes['config'].previousValue.initialData) !== JSON.stringify(this.config.initialData)) {
+          this.patchFormValues();
+        } else {
+          this.buildForm();
+        }
+      } else {
+        this.buildForm();
+      }
     }
     if (changes['isOpen'] && changes['isOpen'].currentValue && this.config) {
       // Rebuild form when modal opens to ensure fresh state
       this.buildForm();
+    }
+  }
+
+  /**
+   * Patch form values when initialData changes (without rebuilding form)
+   */
+  private patchFormValues(): void {
+    if (this.form && this.config.initialData) {
+      this.form.patchValue(this.config.initialData);
+      this.updateFieldProperties();
     }
   }
 
@@ -367,6 +406,39 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
   private getFieldLabel(key: string): string {
     const field = this.config.fields.find(f => f.key === key);
     return field?.label || key;
+  }
+
+  /**
+   * Get paginated select config for field
+   */
+  getPaginatedSelectConfig(field: FormFieldConfig): any {
+    if (!field.paginatedSelectConfig) {
+      return {
+        loadOptions: async () => ({ options: [], hasMore: false }),
+      };
+    }
+    return field.paginatedSelectConfig;
+  }
+
+  /**
+   * Handle paginated select value change
+   */
+  onPaginatedSelectChange(fieldKey: string, value: string | number): void {
+    const control = this.form.get(fieldKey);
+    if (control) {
+      control.setValue(value);
+      control.markAsTouched();
+      this.updateFieldProperties();
+    }
+  }
+
+  /**
+   * Handle paginated select create click
+   */
+  onPaginatedSelectCreate(field: FormFieldConfig): void {
+    if (field.paginatedSelectConfig?.onCreateClick) {
+      field.paginatedSelectConfig.onCreateClick();
+    }
   }
 
   /**

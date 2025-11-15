@@ -13,6 +13,7 @@ export type FormFieldType =
   | 'url' 
   | 'textarea' 
   | 'select' 
+  | 'paginated-select'
   | 'checkbox' 
   | 'date' 
   | 'time';
@@ -24,6 +25,24 @@ export interface SelectOption {
   value: string | number;
   label: string;
   disabled?: boolean;
+}
+
+/**
+ * Paginated select configuration
+ */
+export interface PaginatedSelectConfig {
+  loadOptions: (page: number, limit: number, search?: string) => Promise<{
+    options: SelectOption[];
+    hasMore: boolean;
+    total?: number;
+  }>;
+  searchPlaceholder?: string;
+  itemsPerPage?: number;
+  showSearch?: boolean;
+  allowCreate?: boolean;
+  createLabel?: string;
+  createValue?: string;
+  onCreateClick?: () => void;
 }
 
 /**
@@ -39,6 +58,7 @@ export interface FormFieldConfig {
   defaultValue?: any; // Default value
   validators?: ValidatorFn[]; // Custom validators
   options?: SelectOption[]; // Options for select/radio fields
+  paginatedSelectConfig?: PaginatedSelectConfig; // Configuration for paginated-select type
   hint?: string; // Help text
   errorMessage?: string; // Custom error message
   gridCols?: number; // Grid columns (1-12, default: 12)

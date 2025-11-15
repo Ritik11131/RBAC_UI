@@ -5,11 +5,37 @@
   [config]="config"
   [actions]="actions"
   [idKey]="'id'"
+  [loading]="isLoading"
+  [serverSidePagination]="true"
+  [totalRecords]="totalRecords"
   (pageChange)="onPageChange($event)"
   (itemsPerPageChange)="onItemsPerPageChange($event)"
   (sortChange)="onSortChange($event)"
   (searchChange)="onSearchChange($event)"
   (selectionChange)="onSelectionChange($event)"
   (actionClick)="onActionClick($event)"
+  (createClick)="onCreateClick()"
 ></app-generic-data-table>
+
+<!-- Entity Form Modal -->
+@if (formConfig) {
+  <app-generic-form-modal
+    [isOpen]="isFormModalOpen"
+    [config]="formConfig"
+    (close)="onFormModalClose()"
+    (success)="onFormModalSuccess($event)"
+    (error)="onFormModalError($event)"
+  />
+}
+
+<!-- Profile Creation Modal (for creating profile from entity form) -->
+@if (profileFormConfig) {
+  <app-generic-form-modal
+    [isOpen]="isProfileModalOpen"
+    [config]="profileFormConfig"
+    (close)="onProfileModalClose()"
+    (success)="onProfileCreated($event)"
+    (error)="onProfileModalError($event)"
+  />
+}
 
