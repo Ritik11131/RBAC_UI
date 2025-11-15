@@ -7,6 +7,8 @@ import { CheckboxComponent } from '../../form/input/checkbox.component';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdown.component';
 import { SpinnerComponent } from '../../common/spinner/spinner.component';
+import { TableCellValuePipe } from '../../../pipe/table-cell-value.pipe';
+import { TablePageNumbersPipe } from '../../../pipe/table-page-numbers.pipe';
 
 
 export type ColumnType = 'text' | 'badge' | 'custom' | 'checkbox';
@@ -35,11 +37,14 @@ export interface TableAction<T = any> {
 
 export interface TableConfig {
   title?: string;
+  subtitle?: string; // Informative subtext displayed below the title
   showSearch?: boolean;
   showPagination?: boolean;
   showItemsPerPage?: boolean;
   showSelectAll?: boolean;
   showDownload?: boolean;
+  showCreateButton?: boolean; // Show create/add button in header
+  createButtonLabel?: string; // Label for create button (default: 'Create')
   searchPlaceholder?: string;
   itemsPerPageOptions?: number[];
   defaultItemsPerPage?: number;
@@ -60,6 +65,8 @@ export interface TableConfig {
     SafeHtmlPipe,
     TableDropdownComponent,
     SpinnerComponent,
+    TableCellValuePipe,
+    TablePageNumbersPipe,
   ],
   templateUrl: './generic-data-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,6 +91,7 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
   @Output() selectionChange = new EventEmitter<T[]>();
   @Output() downloadClick = new EventEmitter<void>();
   @Output() actionClick = new EventEmitter<{ action: string; item: T }>();
+  @Output() createClick = new EventEmitter<void>();
 
   // Internal state
   searchTerm = '';
@@ -101,6 +109,8 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     showItemsPerPage: true,
     showSelectAll: true,
     showDownload: false,
+    showCreateButton: false,
+    createButtonLabel: 'Create',
     searchPlaceholder: 'Search...',
     itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
@@ -207,7 +217,11 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     return Math.min(end, this.totalRecordsCount);
   }
 
-  getCellValue(item: T, column: TableColumn<T>): any {
+  /**
+   * Get cell value - used internally for filtering and sorting
+   * For template display, use the tableCellValue pipe instead
+   */
+  private getCellValue(item: T, column: TableColumn<T>): any {
     if (column.render) {
       return column.render(item);
     }
@@ -219,16 +233,15 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     return value ?? '';
   }
 
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPages = Math.min(this.totalPages, 10); // Show max 10 page numbers
-    const startPage = Math.max(1, this.currentPage - 4);
-    const endPage = Math.min(this.totalPages, startPage + 9);
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
+  /**
+   * Helper method to get badge color config for pipe
+   * This is needed because pipes can't directly access column.badgeColor function
+   */
+  getBadgeColorForPipe(item: T, column: TableColumn<T>): 'success' | 'warning' | 'error' | 'info' {
+    if (column.badgeColor) {
+      return column.badgeColor(item);
     }
-    return pages;
+    return 'info';
   }
 
   onItemsPerPageChangeHandler() {
@@ -340,11 +353,8 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     this.downloadClick.emit();
   }
 
-  getBadgeColor(item: T, column: TableColumn<T>): 'success' | 'warning' | 'error' | 'info' {
-    if (column.badgeColor) {
-      return column.badgeColor(item);
-    }
-    return 'info';
+  handleCreate() {
+    this.createClick.emit();
   }
 
   hasActions(): boolean {

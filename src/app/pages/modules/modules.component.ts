@@ -58,11 +58,14 @@ export class ModulesComponent implements OnInit, OnDestroy {
   // Table configuration
   config: TableConfig = {
     title: 'Modules',
+    subtitle: 'Manage and configure system modules. Create, edit, or delete modules to organize your application features.',
     showSearch: true,
     showPagination: true,
     showItemsPerPage: true,
     showSelectAll: true,
     showDownload: false,
+    showCreateButton: true,
+    createButtonLabel: 'Create Module',
     searchPlaceholder: 'Search modules...',
     itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
@@ -233,5 +236,15 @@ export class ModulesComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  /**
+   * Handle create button click
+   */
+  onCreateClick(): void {
+    console.log('Create module clicked');
+    // TODO: Open create modal or navigate to create page
+    // Example: this.router.navigate(['/modules/create']);
+    // Or: this.openCreateModal();
   }
 }
