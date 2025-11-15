@@ -1,0 +1,14 @@
+<app-page-breadcrumb pageTitle="Profiles" />
+<app-generic-data-table
+  [data]="profilesData"
+  [columns]="columns"
+  [config]="config"
+  [actions]="actions"
+  [idKey]="'id'"
+  (pageChange)="onPageChange($event)"
+  (itemsPerPageChange)="onItemsPerPageChange($event)"
+  (sortChange)="onSortChange($event)"
+  (searchChange)="onSearchChange($event)"
+  (selectionChange)="onSelectionChange($event)"
+  (actionClick)="onActionClick($event)"
+></app-generic-data-table>

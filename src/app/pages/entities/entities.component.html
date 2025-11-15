@@ -1,0 +1,15 @@
+<app-page-breadcrumb pageTitle="Entities" />
+<app-generic-data-table
+  [data]="entitiesData"
+  [columns]="columns"
+  [config]="config"
+  [actions]="actions"
+  [idKey]="'id'"
+  (pageChange)="onPageChange($event)"
+  (itemsPerPageChange)="onItemsPerPageChange($event)"
+  (sortChange)="onSortChange($event)"
+  (searchChange)="onSearchChange($event)"
+  (selectionChange)="onSelectionChange($event)"
+  (actionClick)="onActionClick($event)"
+></app-generic-data-table>
+

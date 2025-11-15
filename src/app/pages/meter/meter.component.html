@@ -1,0 +1,14 @@
+<app-page-breadcrumb pageTitle="Meters" />
+<app-generic-data-table
+  [data]="metersData"
+  [columns]="columns"
+  [config]="config"
+  [actions]="actions"
+  [idKey]="'id'"
+  (pageChange)="onPageChange($event)"
+  (itemsPerPageChange)="onItemsPerPageChange($event)"
+  (sortChange)="onSortChange($event)"
+  (searchChange)="onSearchChange($event)"
+  (selectionChange)="onSelectionChange($event)"
+  (actionClick)="onActionClick($event)"
+></app-generic-data-table>
