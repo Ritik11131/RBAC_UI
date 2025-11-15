@@ -10,7 +10,7 @@
             Country
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ address.country }}
+            {{ displayAddress.country }}
           </p>
         </div>
         <div>
@@ -18,7 +18,7 @@
             City/State
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ address.cityState }}
+            {{ displayAddress.cityState }}
           </p>
         </div>
         <div>
@@ -26,7 +26,7 @@
             Postal Code
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ address.postalCode }}
+            {{ displayAddress.postalCode }}
           </p>
         </div>
         <div>
@@ -34,7 +34,7 @@
             TAX ID
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ address.taxId }}
+            {{ displayAddress.taxId }}
           </p>
         </div>
       </div>
@@ -67,7 +67,7 @@
     [isOpen]="isOpen"
     (close)="closeModal()"
   >
-    <form class="flex h-full flex-col" (ngSubmit)="handleSave()">
+    <form [formGroup]="form" class="flex h-full flex-col" (ngSubmit)="handleSave()">
       <!-- Form Content - Scrollable -->
       <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
         <div>
@@ -75,25 +75,25 @@
             Edit Address
           </h4>
           <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-            Update your details to keep your profile up-to-date.
+            Update your address details to keep your profile up-to-date.
           </p>
         </div>
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div>
             <app-label>Country</app-label>
-            <app-input-field type="text" [value]="address.country" />
+            <input type="text" formControlName="country" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
             <app-label>City/State</app-label>
-            <app-input-field type="text" [value]="address.cityState" />
+            <input type="text" formControlName="cityState" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
             <app-label>Postal Code</app-label>
-            <app-input-field type="text" [value]="address.postalCode" />
+            <input type="text" formControlName="postalCode" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
             <app-label>TAX ID</app-label>
-            <app-input-field type="text" [value]="address.taxId" />
+            <input type="text" formControlName="taxId" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
         </div>
       </div>
@@ -101,8 +101,14 @@
       <!-- Fixed Action Buttons -->
       <div class="shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
         <div class="flex items-center justify-end gap-3">
-          <app-button size="sm" variant="outline" (btnClick)="closeModal()">Close</app-button>
-          <app-button size="sm" (btnClick)="handleSave()">Save Changes</app-button>
+          <app-button size="sm" variant="outline" (btnClick)="closeModal()" [disabled]="isLoading">Close</app-button>
+          <app-button size="sm" type="submit" [disabled]="form.invalid || isLoading">
+            @if (isLoading) {
+              Saving...
+            } @else {
+              Save Changes
+            }
+          </app-button>
         </div>
       </div>
     </form>

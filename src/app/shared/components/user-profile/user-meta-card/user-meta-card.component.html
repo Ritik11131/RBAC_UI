@@ -4,25 +4,25 @@
   <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
     <div class="flex flex-col items-center w-full gap-6 xl:flex-row">
       <div class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-        <img [src]="user.avatar" alt="user" />
+        <img [src]="displayUser.avatar" alt="user" />
       </div>
       <div class="order-3 xl:order-2">
         <h4 class="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-          {{ user.firstName }} {{ user.lastName }}
+          {{ displayUser.firstName }} {{ displayUser.lastName }}
         </h4>
         <div class="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ user.role }}
+            {{ displayUser.role }}
           </p>
           <div class="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ user.location }}
+            {{ displayUser.location }}
           </p>
         </div>
       </div>
       <div class="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
         <a
-          [href]="user.social.facebook"
+          [href]="displayUser.social.facebook"
           target="_blank"
           rel="noopener"
           class="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
@@ -43,7 +43,7 @@
         </a>
 
         <a
-          [href]="user.social.x"
+          [href]="displayUser.social.x"
           target="_blank"
           rel="noopener"
           class="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
@@ -64,7 +64,7 @@
         </a>
 
         <a
-          [href]="user.social.linkedin"
+          [href]="displayUser.social.linkedin"
           target="_blank"
           rel="noopener"
           class="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
@@ -85,7 +85,7 @@
         </a>
 
         <a
-          [href]="user.social.instagram"
+          [href]="displayUser.social.instagram"
           target="_blank"
           rel="noopener"
           class="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
@@ -136,7 +136,7 @@
   [isOpen]="isOpen"
   (close)="closeModal()"
 >
-  <form class="flex h-full flex-col" (ngSubmit)="handleSave()">
+  <form [formGroup]="form" class="flex h-full flex-col" (ngSubmit)="handleSave()">
     <!-- Form Content - Scrollable -->
     <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
       <div>
@@ -154,20 +154,20 @@
         </h5>
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div>
-            <label>Facebook</label>
-            <app-input-field type="text" [value]="user.social.facebook" />
+            <app-label>Facebook</app-label>
+            <input type="text" formControlName="facebook" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
-            <label>X.com</label>
-            <app-input-field type="text" [value]="user.social.x" />
+            <app-label>X.com</app-label>
+            <input type="text" formControlName="x" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
-            <label>Linkedin</label>
-            <app-input-field type="text" [value]="user.social.linkedin" />
+            <app-label>Linkedin</app-label>
+            <input type="text" formControlName="linkedin" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
-            <label>Instagram</label>
-            <app-input-field type="text" [value]="user.social.instagram" />
+            <app-label>Instagram</app-label>
+            <input type="text" formControlName="instagram" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
         </div>
       </div>
@@ -178,24 +178,24 @@
         </h5>
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div>
-            <label>First Name</label>
-            <app-input-field type="text" [value]="user.firstName" />
+            <app-label>First Name</app-label>
+            <input type="text" formControlName="firstName" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
-            <label>Last Name</label>
-            <app-input-field type="text" [value]="user.lastName" />
+            <app-label>Last Name</app-label>
+            <input type="text" formControlName="lastName" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div>
-            <label>Email Address</label>
-            <app-input-field type="text" [value]="user.email" />
+            <app-label>Email Address</app-label>
+            <input type="text" formControlName="email" [disabled]="true" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 opacity-60 cursor-not-allowed" />
           </div>
           <div>
-            <label>Phone</label>
-            <app-input-field type="text" [value]="user.phone" />
+            <app-label>Phone</app-label>
+            <input type="text" formControlName="phone" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
           <div class="sm:col-span-2">
-            <label>Bio</label>
-            <app-input-field type="text" [value]="user.bio" />
+            <app-label>Bio</app-label>
+            <input type="text" formControlName="bio" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
           </div>
         </div>
       </div>
@@ -208,14 +208,20 @@
           size="sm"
           variant="outline"
           (btnClick)="closeModal()"
+          [disabled]="isLoading"
         >
           Close
         </app-button>
         <app-button
           size="sm"
-          (btnClick)="handleSave()"
+          type="submit"
+          [disabled]="form.invalid || isLoading"
         >
-          Save Changes
+          @if (isLoading) {
+            Saving...
+          } @else {
+            Save Changes
+          }
         </app-button>
       </div>
     </div>

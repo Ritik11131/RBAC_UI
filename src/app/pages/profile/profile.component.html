@@ -3,9 +3,19 @@
   <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
     Profile
   </h3>
-  <div class="space-y-6">
-    <div><app-user-meta-card/></div>
-    <div><app-user-info-card/></div>
-    <div><app-user-address-card/></div>
-  </div>
+  @if (isLoading) {
+    <div class="flex items-center justify-center py-12">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Loading profile...</p>
+    </div>
+  } @else if (currentUser) {
+    <div class="space-y-6">
+      <div><app-user-meta-card [user]="currentUser" (userUpdated)="onUserUpdated($event)" /></div>
+      <div><app-user-info-card [user]="currentUser" (userUpdated)="onUserUpdated($event)" /></div>
+      <div><app-user-address-card [user]="currentUser" (userUpdated)="onUserUpdated($event)" /></div>
+    </div>
+  } @else {
+    <div class="flex items-center justify-center py-12">
+      <p class="text-sm text-gray-500 dark:text-gray-400">No user data available</p>
+    </div>
+  }
 </div>

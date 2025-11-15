@@ -12,6 +12,22 @@ export interface User {
   role_id: string;
   is_active?: boolean;
   is_deleted?: boolean;
+  attributes?: {
+    bio?: string;
+    address?: {
+      country?: string;
+      cityState?: string;
+      postalCode?: string;
+      taxId?: string;
+    };
+    social?: {
+      facebook?: string;
+      x?: string;
+      linkedin?: string;
+      instagram?: string;
+    };
+    [key: string]: any;
+  };
   created_by?: string;
   creation_time?: string;
   last_update_on?: string;
@@ -38,6 +54,22 @@ export interface UserUpdatePayload {
   entity_id?: string;
   role_id?: string;
   is_active?: boolean;
+  attributes?: {
+    bio?: string;
+    address?: {
+      country?: string;
+      cityState?: string;
+      postalCode?: string;
+      taxId?: string;
+    };
+    social?: {
+      facebook?: string;
+      x?: string;
+      linkedin?: string;
+      instagram?: string;
+    };
+    [key: string]: any;
+  };
 }
 
 /**

@@ -10,7 +10,7 @@
             First Name
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ user.firstName }}
+            {{ displayUser.firstName }}
           </p>
         </div>
         <div>
@@ -18,7 +18,7 @@
             Last Name
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ user.lastName }}
+            {{ displayUser.lastName }}
           </p>
         </div>
         <div>
@@ -26,7 +26,7 @@
             Email address
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ user.email }}
+            {{ displayUser.email }}
           </p>
         </div>
         <div>
@@ -34,7 +34,7 @@
             Phone
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ user.phone }}
+            {{ displayUser.phone }}
           </p>
         </div>
         <div>
@@ -42,7 +42,7 @@
             Bio
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-            {{ user.bio }}
+            {{ displayUser.bio }}
           </p>
         </div>
       </div>
@@ -75,9 +75,9 @@
     [isOpen]="isOpen"
     (close)="closeModal()"
   >
-    <form class="flex h-full flex-col" (ngSubmit)="handleSave()">
-      <!-- Form Content - Scrollable -->
-      <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+  <form [formGroup]="form" class="flex h-full flex-col" (ngSubmit)="handleSave()">
+    <!-- Form Content - Scrollable -->
+    <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
         <div>
           <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
             Edit Personal Information
@@ -87,30 +87,6 @@
           </p>
         </div>
         
-        <div>
-          <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
-            Social Links
-          </h5>
-          <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-            <div>
-              <app-label>Facebook</app-label>
-              <app-input-field type="text" [value]="user.social.facebook" />
-            </div>
-            <div>
-              <app-label>X.com</app-label>
-              <app-input-field type="text" [value]="user.social.x" />
-            </div>
-            <div>
-              <app-label>Linkedin</app-label>
-              <app-input-field type="text" [value]="user.social.linkedin" />
-            </div>
-            <div>
-              <app-label>Instagram</app-label>
-              <app-input-field type="text" [value]="user.social.instagram" />
-            </div>
-          </div>
-        </div>
-        
         <div class="mt-7">
           <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
             Personal Information
@@ -118,23 +94,23 @@
           <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
             <div>
               <app-label>First Name</app-label>
-              <app-input-field type="text" [value]="user.firstName" />
+              <input type="text" formControlName="firstName" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
             </div>
             <div>
               <app-label>Last Name</app-label>
-              <app-input-field type="text" [value]="user.lastName" />
+              <input type="text" formControlName="lastName" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
             </div>
             <div>
               <app-label>Email Address</app-label>
-              <app-input-field type="text" [value]="user.email" />
+              <input type="text" formControlName="email" [disabled]="true" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 opacity-60 cursor-not-allowed" />
             </div>
             <div>
               <app-label>Phone</app-label>
-              <app-input-field type="text" [value]="user.phone" />
+              <input type="text" formControlName="phone" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
             </div>
             <div class="sm:col-span-2">
               <app-label>Bio</app-label>
-              <app-input-field type="text" [value]="user.bio" />
+              <input type="text" formControlName="bio" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
             </div>
           </div>
         </div>
@@ -143,8 +119,14 @@
       <!-- Fixed Action Buttons -->
       <div class="shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
         <div class="flex items-center justify-end gap-3">
-          <app-button size="sm" variant="outline" (btnClick)="closeModal()">Close</app-button>
-          <app-button size="sm" (btnClick)="handleSave()">Save Changes</app-button>
+          <app-button size="sm" variant="outline" (btnClick)="closeModal()" [disabled]="isLoading">Close</app-button>
+          <app-button size="sm" type="submit" [disabled]="form.invalid || isLoading">
+            @if (isLoading) {
+              Saving...
+            } @else {
+              Save Changes
+            }
+          </app-button>
         </div>
       </div>
     </form>
