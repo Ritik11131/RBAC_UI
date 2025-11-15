@@ -148,7 +148,7 @@ export class ProfilesComponent {
     showSelectAll: true,
     showDownload: false,
     searchPlaceholder: 'Search profiles...',
-    itemsPerPageOptions: [5, 10, 20, 50],
+    itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
     emptyMessage: 'No profiles found',
     enableSorting: true,

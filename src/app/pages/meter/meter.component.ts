@@ -135,7 +135,7 @@ export class MeterComponent {
     showSelectAll: true,
     showDownload: false,
     searchPlaceholder: 'Search meters...',
-    itemsPerPageOptions: [5, 10, 20, 50],
+    itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
     emptyMessage: 'No meters found',
     enableSorting: true,

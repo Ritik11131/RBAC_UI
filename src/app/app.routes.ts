@@ -25,10 +25,14 @@ import { UserComponent } from './pages/user/user.component';
 import { MeterComponent } from './pages/meter/meter.component';
 import { ProfilesComponent } from './pages/profiles/profiles.component';
 
+import { authGuard } from './core/guards/auth.guard';
+import { guestGuard } from './core/guards/guest.guard';
+
 export const routes: Routes = [
   {
     path:'',
     component:AppLayoutComponent,
+    canActivate: [authGuard],
     children:[
       {
         path: '',
@@ -143,11 +147,13 @@ export const routes: Routes = [
   {
     path:'signin',
     component:SignInComponent,
+    canActivate: [guestGuard],
     title:'Sign In | RBAC System'
   },
   {
     path:'signup',
     component:SignUpComponent,
+    canActivate: [guestGuard],
     title:'Sign Up | RBAC System'
   },
   // error pages

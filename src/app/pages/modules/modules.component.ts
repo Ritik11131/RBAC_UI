@@ -114,7 +114,7 @@ export class ModulesComponent {
     showSelectAll: true,
     showDownload: false,
     searchPlaceholder: 'Search modules...',
-    itemsPerPageOptions: [5, 10, 20, 50],
+    itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
     emptyMessage: 'No modules found',
     enableSorting: true,

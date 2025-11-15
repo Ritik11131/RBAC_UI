@@ -144,7 +144,7 @@ export class UserComponent {
     showSelectAll: true,
     showDownload: false,
     searchPlaceholder: 'Search users...',
-    itemsPerPageOptions: [5, 10, 20, 50],
+    itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
     emptyMessage: 'No users found',
     enableSorting: true,

@@ -135,7 +135,7 @@ export class RolesComponent {
     showSelectAll: true,
     showDownload: false,
     searchPlaceholder: 'Search roles...',
-    itemsPerPageOptions: [5, 10, 20, 50],
+    itemsPerPageOptions: [10, 20, 50],
     defaultItemsPerPage: 10,
     emptyMessage: 'No roles found',
     enableSorting: true,

@@ -1,9 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
   selector: 'app-input-field',
   imports: [CommonModule],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => InputFieldComponent),
+      multi: true
+    }
+  ],
   template: `
     <div class="relative">
       <input
@@ -11,13 +19,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
         [id]="id"
         [name]="name"
         [placeholder]="placeholder"
-        [value]="value"
+        [value]="internalValue"
         [min]="min"
         [max]="max"
         [step]="step"
         [disabled]="disabled"
         [ngClass]="inputClasses"
         (input)="onInput($event)"
+        (blur)="onBlur()"
       />
 
       @if (hint) {
@@ -33,13 +42,12 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
     </div>
   `,
 })
-export class InputFieldComponent {
+export class InputFieldComponent implements ControlValueAccessor {
 
   @Input() type: string = 'text';
   @Input() id?: string = '';
   @Input() name?: string = '';
   @Input() placeholder?: string = '';
-  @Input() value: string | number = '';
   @Input() min?: string;
   @Input() max?: string;
   @Input() step?: number;
@@ -50,6 +58,11 @@ export class InputFieldComponent {
   @Input() className: string = '';
 
   @Output() valueChange = new EventEmitter<string | number>();
+
+  // ControlValueAccessor properties
+  internalValue: string | number = '';
+  onChange: (value: string | number) => void = () => {};
+  onTouched: () => void = () => {};
 
   get inputClasses(): string {
     let inputClasses = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${this.className}`;
@@ -68,6 +81,34 @@ export class InputFieldComponent {
 
   onInput(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.valueChange.emit(this.type === 'number' ? +input.value : input.value);
+    const newValue = this.type === 'number' ? +input.value : input.value;
+    this.internalValue = newValue;
+    this.onChange(newValue);
+    this.valueChange.emit(newValue);
+  }
+
+  onBlur() {
+    this.onTouched();
+  }
+
+  // ControlValueAccessor implementation
+  writeValue(value: string | number | null): void {
+    if (value !== null && value !== undefined) {
+      this.internalValue = value;
+    } else {
+      this.internalValue = '';
+    }
+  }
+
+  registerOnChange(fn: (value: string | number) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
   }
 }
