@@ -220,7 +220,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
         () => {
           // Note: This would open profile modal, but we're already in profile form context
           // So we might want to handle this differently or just show a message
-          console.warn('Cannot create profile from entity form when already in profile form');
+          this.toastService.warning('Cannot create profile from entity form when already in profile form');
         }
       ),
       {
@@ -309,7 +309,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
 
     // Prevent submission if profile_id is still the create placeholder
     if (data.profile_id === '__create_new__') {
-      console.warn('Please create a profile first or select an existing one');
+      this.toastService.warning('Please create a profile first or select an existing one');
       return new Observable(observer => {
         observer.error({ message: 'Please select a valid profile or create a new one first' });
       });
@@ -643,7 +643,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
     
     // Prevent submission if entity_id is still the create placeholder
     if (data.entity_id === '__create_new__') {
-      console.warn('Please create an entity first or select an existing one');
+      this.toastService.warning('Please create an entity first or select an existing one');
       return new Observable(observer => {
         observer.error({ message: 'Please select a valid entity or create a new one first' });
       });

@@ -218,7 +218,7 @@ export class RolesComponent implements OnInit, OnDestroy {
         },
         () => {
           // Entity creation from role form - could be handled if needed
-          console.warn('Entity creation from role form');
+          this.toastService.warning('Entity creation from role form');
         }
       ),
       {

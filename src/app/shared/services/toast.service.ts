@@ -84,7 +84,7 @@ export class ToastService {
    * Show warning toast
    */
   warning(message: string, title?: string, duration?: number): string {
-    return this.show({ type: 'warning', message, title, duration });
+    return this.show({ type: 'warning', message, title, duration, position: 'bottom-center' });
   }
 
   /**

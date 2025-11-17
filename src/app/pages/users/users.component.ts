@@ -166,7 +166,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         },
         () => {
           // Entity creation from user form - could be handled if needed
-          console.warn('Entity creation from user form');
+          this.toastService.warning('Entity creation from user form');
         }
       ),
       {

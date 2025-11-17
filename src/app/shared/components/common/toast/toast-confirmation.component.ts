@@ -22,41 +22,36 @@ import { Toast } from '../../../../core/interfaces/toast.interface';
           role="alert"
         >
           <div class="p-6">
-            <!-- Icon and Title -->
-            <div class="flex items-center mb-4">
-              <div class="inline-flex items-center justify-center shrink-0 w-10 h-10 text-warning-500 bg-warning-50 rounded-lg mr-3 dark:bg-warning-500/15 dark:text-warning-400">
-                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z"/>
-                </svg>
-                <span class="sr-only">Warning icon</span>
-              </div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                {{ toast.title || 'Confirm Action' }}
+            <!-- Danger Toast Style -->
+            <div class="w-full p-4 text-sm rounded-lg border border-error-200 bg-error-50 dark:bg-error-500/15 dark:border-error-500/30">
+              <h3 class="font-semibold text-error-700 dark:text-error-400 mb-2">
+                {{ toast.title || 'Delete Confirmation' }}
               </h3>
-            </div>
+              
+              <div class="mt-2 mb-4 text-error-600 dark:text-error-300">
+                {{ toast.message }}
+              </div>
 
-            <!-- Message -->
-            <div class="mb-6 text-sm text-gray-600 dark:text-gray-300">
-              {{ toast.message }}
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center justify-end gap-3">
-              <app-button
-                size="sm"
-                variant="outline"
-                (btnClick)="onCancel()"
-              >
-                {{ toast.cancelLabel || 'Cancel' }}
-              </app-button>
-              <app-button
-                size="sm"
-                variant="primary"
-                className="bg-error-500 hover:bg-error-600 text-white dark:bg-error-600 dark:hover:bg-error-700"
-                (btnClick)="onConfirm()"
-              >
-                {{ toast.confirmLabel || 'Confirm' }}
-              </app-button>
+              <!-- Actions -->
+              <div class="flex items-center space-x-3">
+                <app-button
+                  size="xs"
+                  variant="primary"
+                  className="bg-error-500 hover:bg-error-600 text-white dark:bg-error-600 dark:hover:bg-error-700"
+                  (btnClick)="onConfirm()"
+                  [startIcon]="getDeleteIcon()"
+                >
+                  {{ toast.confirmLabel || 'Delete' }}
+                </app-button>
+                <app-button
+                  size="xs"
+                  variant="outline"
+                  className="text-error-600 border-error-300 hover:bg-error-50 dark:text-error-400 dark:border-error-500/50 dark:hover:bg-error-500/10"
+                  (btnClick)="onCancel()"
+                >
+                  {{ toast.cancelLabel || 'Cancel' }}
+                </app-button>
+              </div>
             </div>
           </div>
         </div>
@@ -113,6 +108,13 @@ export class ToastConfirmationComponent implements OnInit, OnDestroy, OnChanges 
   onBackdropClick(): void {
     // Allow closing by clicking backdrop
     this.onCancel();
+  }
+
+  getDeleteIcon(): string {
+    // Delete/Trash icon SVG
+    return `<svg class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m-4 5v6m-4-6v6m8-6v6M10 11h4"/>
+    </svg>`;
   }
 }
 
