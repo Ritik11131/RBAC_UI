@@ -122,6 +122,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     useDropdownMenu: true,
     showEntityFilter: true,
     entityFilterDefault: 'all',
+    moduleName: 'User', // For permission checking
   };
 
   // Action buttons

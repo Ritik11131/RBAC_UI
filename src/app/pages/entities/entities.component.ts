@@ -111,6 +111,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
     useDropdownMenu: true,
     showEntityFilter: true,
     entityFilterDefault: 'all',
+    moduleName: 'Entity', // For permission checking
   };
 
   // Action buttons

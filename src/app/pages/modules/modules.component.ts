@@ -85,6 +85,7 @@ export class ModulesComponent implements OnInit, OnDestroy {
     enableSorting: true,
     enableSelection: true,
     useDropdownMenu: true,
+    moduleName: 'Module', // For permission checking
   };
 
   // Action buttons

@@ -117,6 +117,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
     useDropdownMenu: true,
     showEntityFilter: true,
     entityFilterDefault: 'all',
+    moduleName: 'Profile', // For permission checking
   };
 
   // Action buttons

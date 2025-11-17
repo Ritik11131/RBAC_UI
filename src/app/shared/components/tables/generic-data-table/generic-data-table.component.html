@@ -43,7 +43,7 @@
             </button>
           </div>
         }
-        @if (mergedConfig.showCreateButton) {
+        @if (showCreateButton) {
           <div class="flex-shrink-0">
             <app-button 
               variant="primary" 
@@ -189,7 +189,7 @@
                   </div>
                 </th>
                 }
-                @if (hasActions()) {
+                @if (showActionsColumn) {
                 <th class="px-4 py-3 border border-gray-100 dark:border-white/[0.05]">
                   <p class="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Action</p>
                 </th>
@@ -231,7 +231,7 @@
                   }
                 </td>
                 }
-                @if (hasActions()) {
+                @if (showActionsColumn) {
                 <td class="px-4 py-4 font-normal text-gray-800 border border-gray-100 dark:border-white/[0.05] text-theme-sm dark:text-white/90 whitespace-nowrap">
                   @if (mergedConfig.useDropdownMenu) {
                   <!-- Dropdown Menu for Actions -->

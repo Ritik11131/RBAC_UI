@@ -56,6 +56,7 @@ export interface TableConfig {
   useDropdownMenu?: boolean; // Use dropdown menu for actions instead of direct buttons
   showEntityFilter?: boolean; // Show entity filter toggle (All vs Current Entity Only)
   entityFilterDefault?: 'all' | 'current'; // Default entity filter mode (default: 'all')
+  moduleName?: string; // Module name for permission checking (e.g., 'Module', 'Profile', 'Entity', 'Role', 'User')
 }
 
 @Component({
@@ -133,11 +134,19 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
 
   mergedConfig: TableConfig = {};
 
+  // Computed permission properties (updated only when config changes)
+  canRead: boolean = true;
+  canWrite: boolean = true;
+  showCreateButton: boolean = false;
+  showActionsColumn: boolean = false;
+
   ngOnInit() {
     this.mergedConfig = { ...this.defaultConfig, ...this.config };
     this.itemsPerPage = this.mergedConfig.defaultItemsPerPage || 5;
     // Initialize entity filter state
     this.showAllEntities = this.mergedConfig.entityFilterDefault === 'all';
+    // Compute permission-based properties
+    this.updatePermissionProperties();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -147,10 +156,37 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
       if (this.mergedConfig.entityFilterDefault) {
         this.showAllEntities = this.mergedConfig.entityFilterDefault === 'all';
       }
+      // Recompute permission-based properties when config changes
+      this.updatePermissionProperties();
+    }
+    if (changes['actions']) {
+      // Recompute actions visibility when actions change
+      this.updatePermissionProperties();
     }
     if (changes['data'] && !this.serverSidePagination) {
       this.currentPage = 1;
     }
+  }
+
+  /**
+   * Update permission-based properties
+   * Called only when config or actions change, not on every change detection
+   */
+  private updatePermissionProperties(): void {
+    // Compute read permission
+    if (!this.mergedConfig.moduleName) {
+      this.canRead = true; // Backward compatibility
+      this.canWrite = true;
+    } else {
+      this.canRead = this.authService.hasModulePermissionByName(this.mergedConfig.moduleName, false);
+      this.canWrite = this.authService.hasModulePermissionByName(this.mergedConfig.moduleName, true);
+    }
+
+    // Compute create button visibility
+    this.showCreateButton = (this.mergedConfig.showCreateButton ?? false) && this.canWrite;
+
+    // Compute actions column visibility
+    this.showActionsColumn = this.actions && this.actions.length > 0 && this.canWrite;
   }
 
   // Track by function for better performance
@@ -396,10 +432,10 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     return user?.entity_id || null;
   }
 
-  hasActions(): boolean {
-    return this.actions && this.actions.length > 0;
-  }
-
+  /**
+   * Check if a specific action should be shown for an item
+   * This is still a method because it depends on item-specific logic
+   */
   shouldShowAction(action: TableAction<T>, item: T): boolean {
     return !action.show || action.show(item);
   }

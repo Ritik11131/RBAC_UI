@@ -120,6 +120,7 @@ export class RolesComponent implements OnInit, OnDestroy {
     useDropdownMenu: true,
     showEntityFilter: true,
     entityFilterDefault: 'all',
+    moduleName: 'Role', // For permission checking
   };
 
   // Action buttons
