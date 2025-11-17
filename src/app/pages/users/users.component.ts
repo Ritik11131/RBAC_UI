@@ -12,6 +12,7 @@ import { GenericFormModalComponent } from '../../shared/components/form/generic-
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
 import { createEntityIdField } from '../../shared/utils/form-field-helpers';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-users',
@@ -28,6 +29,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   private usersService = inject(UsersService);
   private entitiesService = inject(EntitiesService);
   private rolesService = inject(RolesService);
+  private toastService = inject(ToastService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -385,7 +387,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading users:', error);
           this.isLoading = false;
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
         }
       });
   }
@@ -437,22 +439,25 @@ export class UsersComponent implements OnInit, OnDestroy {
    * Handle delete action
    */
   private handleDelete(user: User): void {
-    if (confirm(`Are you sure you want to delete "${user.name || user.email}"?`)) {
-      this.isLoading = true;
-      this.usersService.deleteUser(user.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadUsers(); // Reload list
-            // TODO: Show success toast
-          },
-          error: (error) => {
-            console.error('Error deleting user:', error);
-            this.isLoading = false;
-            // TODO: Show error toast
-          }
-        });
-    }
+    this.toastService.confirmDelete(
+      user.name || user.email,
+      () => {
+        this.isLoading = true;
+        this.usersService.deleteUser(user.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadUsers(); // Reload list
+              this.toastService.success(`User "${user.name || user.email}" deleted successfully`);
+            },
+            error: (error) => {
+              console.error('Error deleting user:', error);
+              this.isLoading = false;
+              this.toastService.error(error);
+            }
+          });
+      }
+    );
   }
 
   /**
@@ -577,14 +582,14 @@ export class UsersComponent implements OnInit, OnDestroy {
             };
           } else {
             console.error('Failed to fetch user data:', response.message);
-            // TODO: Show error toast/notification
+            this.toastService.error(response.message || 'Failed to fetch user data');
             this.onFormModalClose();
           }
         },
         error: (error) => {
           this.isLoadingEditData = false;
           console.error('Error fetching user data:', error);
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
           this.onFormModalClose();
         }
       });
@@ -604,7 +609,10 @@ export class UsersComponent implements OnInit, OnDestroy {
    */
   onFormModalSuccess(response: any): void {
     this.loadUsers();
-    // TODO: Show success toast
+    const message = this.formConfig.mode === 'create' 
+      ? 'User created successfully' 
+      : 'User updated successfully';
+    this.toastService.success(message);
   }
 
   /**
@@ -612,7 +620,7 @@ export class UsersComponent implements OnInit, OnDestroy {
    */
   onFormModalError(error: any): void {
     console.error('Form error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 
   /**

@@ -12,6 +12,7 @@ import { GenericFormModalComponent } from '../../shared/components/form/generic-
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
 import { createEntityIdField, createProfileIdField } from '../../shared/utils/form-field-helpers';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-profiles',
@@ -27,6 +28,7 @@ import { createEntityIdField, createProfileIdField } from '../../shared/utils/fo
 export class ProfilesComponent implements OnInit, OnDestroy {
   private profilesService = inject(ProfilesService);
   private entitiesService = inject(EntitiesService);
+  private toastService = inject(ToastService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -425,7 +427,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
         }
       }
       
-      // TODO: Show success toast
+      this.toastService.success(`Entity "${newEntity.name}" created successfully`);
       console.log('Entity created successfully:', newEntity);
       console.log('Profile form will be updated with entity_id:', newEntity.id);
     }
@@ -443,7 +445,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
    */
   onEntityModalError(error: any): void {
     console.error('Entity creation error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 
   /**
@@ -544,7 +546,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading profiles:', error);
           this.isLoading = false;
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
         }
       });
   }
@@ -596,22 +598,25 @@ export class ProfilesComponent implements OnInit, OnDestroy {
    * Handle delete action
    */
   private handleDelete(profile: Profile): void {
-    if (confirm(`Are you sure you want to delete "${profile.name}"?`)) {
-      this.isLoading = true;
-      this.profilesService.deleteProfile(profile.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadProfiles(); // Reload list
-            // TODO: Show success toast
-          },
-          error: (error) => {
-            console.error('Error deleting profile:', error);
-            this.isLoading = false;
-            // TODO: Show error toast
-          }
-        });
-    }
+    this.toastService.confirmDelete(
+      profile.name,
+      () => {
+        this.isLoading = true;
+        this.profilesService.deleteProfile(profile.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadProfiles(); // Reload list
+              this.toastService.success(`Profile "${profile.name}" deleted successfully`);
+            },
+            error: (error) => {
+              console.error('Error deleting profile:', error);
+              this.isLoading = false;
+              this.toastService.error(error);
+            }
+          });
+      }
+    );
   }
 
   /**
@@ -706,14 +711,14 @@ export class ProfilesComponent implements OnInit, OnDestroy {
             };
           } else {
             console.error('Failed to fetch profile data:', response.message);
-            // TODO: Show error toast/notification
+            this.toastService.error(response.message || 'Failed to fetch profile data');
             this.onFormModalClose();
           }
         },
         error: (error) => {
           this.isLoadingEditData = false;
           console.error('Error fetching profile data:', error);
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
           this.onFormModalClose();
         }
       });
@@ -733,7 +738,10 @@ export class ProfilesComponent implements OnInit, OnDestroy {
    */
   onFormModalSuccess(response: any): void {
     this.loadProfiles();
-    // TODO: Show success toast
+    const message = this.formConfig.mode === 'create' 
+      ? 'Profile created successfully' 
+      : 'Profile updated successfully';
+    this.toastService.success(message);
   }
 
   /**
@@ -741,7 +749,7 @@ export class ProfilesComponent implements OnInit, OnDestroy {
    */
   onFormModalError(error: any): void {
     console.error('Form error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 
   /**

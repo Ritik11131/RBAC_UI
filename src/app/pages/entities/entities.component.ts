@@ -12,6 +12,7 @@ import { GenericFormModalComponent } from '../../shared/components/form/generic-
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
 import { createProfileIdField, createEntityIdField } from '../../shared/utils/form-field-helpers';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-entities',
@@ -27,6 +28,7 @@ import { createProfileIdField, createEntityIdField } from '../../shared/utils/fo
 export class EntitiesComponent implements OnInit, OnDestroy {
   private entitiesService = inject(EntitiesService);
   private profilesService = inject(ProfilesService);
+  private toastService = inject(ToastService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -293,7 +295,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading entities:', error);
           this.isLoading = false;
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
         }
       });
   }
@@ -345,22 +347,25 @@ export class EntitiesComponent implements OnInit, OnDestroy {
    * Handle delete action
    */
   private handleDelete(entity: Entity): void {
-    if (confirm(`Are you sure you want to delete "${entity.name}"?`)) {
-      this.isLoading = true;
-      this.entitiesService.deleteEntity(entity.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadEntities(); // Reload list
-            // TODO: Show success toast
-          },
-          error: (error) => {
-            console.error('Error deleting entity:', error);
-            this.isLoading = false;
-            // TODO: Show error toast
-          }
-        });
-    }
+    this.toastService.confirmDelete(
+      entity.name,
+      () => {
+        this.isLoading = true;
+        this.entitiesService.deleteEntity(entity.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadEntities(); // Reload list
+              this.toastService.success(`Entity "${entity.name}" deleted successfully`);
+            },
+            error: (error) => {
+              console.error('Error deleting entity:', error);
+              this.isLoading = false;
+              this.toastService.error(error);
+            }
+          });
+      }
+    );
   }
 
   /**
@@ -467,14 +472,14 @@ export class EntitiesComponent implements OnInit, OnDestroy {
             };
           } else {
             console.error('Failed to fetch entity data:', response.message);
-            // TODO: Show error toast/notification
+            this.toastService.error(response.message || 'Failed to fetch entity data');
             this.onFormModalClose();
           }
         },
         error: (error) => {
           this.isLoadingEditData = false;
           console.error('Error fetching entity data:', error);
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
           this.onFormModalClose();
         }
       });
@@ -494,7 +499,10 @@ export class EntitiesComponent implements OnInit, OnDestroy {
    */
   onFormModalSuccess(response: any): void {
     this.loadEntities();
-    // TODO: Show success toast
+    const message = this.formConfig.mode === 'create' 
+      ? 'Entity created successfully' 
+      : 'Entity updated successfully';
+    this.toastService.success(message);
   }
 
   /**
@@ -502,7 +510,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
    */
   onFormModalError(error: any): void {
     console.error('Form error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 
   /**
@@ -695,7 +703,7 @@ export class EntitiesComponent implements OnInit, OnDestroy {
    */
   onProfileModalError(error: any): void {
     console.error('Profile creation error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 
   /**

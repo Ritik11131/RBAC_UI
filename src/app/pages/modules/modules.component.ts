@@ -9,6 +9,7 @@ import { formatDateMedium } from '../../shared/utils/date.util';
 import { GenericFormModalComponent } from '../../shared/components/form/generic-form-modal/generic-form-modal.component';
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-modules',
@@ -23,6 +24,7 @@ import { Validators } from '@angular/forms';
 })
 export class ModulesComponent implements OnInit, OnDestroy {
   private modulesService = inject(ModulesService);
+  private toastService = inject(ToastService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -210,7 +212,7 @@ export class ModulesComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading modules:', error);
           this.isLoading = false;
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
         }
       });
   }
@@ -263,22 +265,25 @@ export class ModulesComponent implements OnInit, OnDestroy {
    * Handle delete action
    */
   private handleDelete(module: Module): void {
-    if (confirm(`Are you sure you want to delete "${module.name}"?`)) {
-      this.isLoading = true;
-      this.modulesService.deleteModule(module.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadModules(); // Reload list
-            // TODO: Show success toast
-          },
-          error: (error) => {
-            console.error('Error deleting module:', error);
-            this.isLoading = false;
-            // TODO: Show error toast
-          }
-        });
-    }
+    this.toastService.confirmDelete(
+      module.name,
+      () => {
+        this.isLoading = true;
+        this.modulesService.deleteModule(module.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadModules(); // Reload list
+              this.toastService.success(`Module "${module.name}" deleted successfully`);
+            },
+            error: (error) => {
+              console.error('Error deleting module:', error);
+              this.isLoading = false;
+              this.toastService.error(error);
+            }
+          });
+      }
+    );
   }
 
   /**
@@ -347,14 +352,14 @@ export class ModulesComponent implements OnInit, OnDestroy {
             };
           } else {
             console.error('Failed to fetch module data:', response.message);
-            // TODO: Show error toast/notification
+            this.toastService.error(response.message || 'Failed to fetch module data');
             this.onFormModalClose();
           }
         },
         error: (error) => {
           this.isLoadingEditData = false;
           console.error('Error fetching module data:', error);
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
           this.onFormModalClose();
         }
       });
@@ -374,7 +379,10 @@ export class ModulesComponent implements OnInit, OnDestroy {
    */
   onFormModalSuccess(response: any): void {
     this.loadModules();
-    // TODO: Show success toast
+    const message = this.formConfig.mode === 'create' 
+      ? 'Module created successfully' 
+      : 'Module updated successfully';
+    this.toastService.success(message);
   }
 
   /**
@@ -382,6 +390,6 @@ export class ModulesComponent implements OnInit, OnDestroy {
    */
   onFormModalError(error: any): void {
     console.error('Form error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 }

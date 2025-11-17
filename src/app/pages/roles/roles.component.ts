@@ -14,6 +14,7 @@ import { GenericFormModalComponent } from '../../shared/components/form/generic-
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
 import { createEntityIdField } from '../../shared/utils/form-field-helpers';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-roles',
@@ -28,6 +29,7 @@ import { createEntityIdField } from '../../shared/utils/form-field-helpers';
 })
 export class RolesComponent implements OnInit, OnDestroy {
   private rolesService = inject(RolesService);
+  private toastService = inject(ToastService);
   private entitiesService = inject(EntitiesService);
   private modulesService = inject(ModulesService);
   private destroy$ = new Subject<void>();
@@ -361,7 +363,7 @@ export class RolesComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading roles:', error);
           this.isLoading = false;
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
         }
       });
   }
@@ -413,22 +415,25 @@ export class RolesComponent implements OnInit, OnDestroy {
    * Handle delete action
    */
   private handleDelete(role: Role): void {
-    if (confirm(`Are you sure you want to delete "${role.name}"?`)) {
-      this.isLoading = true;
-      this.rolesService.deleteRole(role.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadRoles(); // Reload list
-            // TODO: Show success toast
-          },
-          error: (error) => {
-            console.error('Error deleting role:', error);
-            this.isLoading = false;
-            // TODO: Show error toast
-          }
-        });
-    }
+    this.toastService.confirmDelete(
+      role.name,
+      () => {
+        this.isLoading = true;
+        this.rolesService.deleteRole(role.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadRoles(); // Reload list
+              this.toastService.success(`Role "${role.name}" deleted successfully`);
+            },
+            error: (error) => {
+              console.error('Error deleting role:', error);
+              this.isLoading = false;
+              this.toastService.error(error);
+            }
+          });
+      }
+    );
   }
 
   /**
@@ -525,14 +530,14 @@ export class RolesComponent implements OnInit, OnDestroy {
             };
           } else {
             console.error('Failed to fetch role data:', response.message);
-            // TODO: Show error toast/notification
+            this.toastService.error(response.message || 'Failed to fetch role data');
             this.onFormModalClose();
           }
         },
         error: (error) => {
           this.isLoadingEditData = false;
           console.error('Error fetching role data:', error);
-          // TODO: Show error toast/notification
+          this.toastService.error(error);
           this.onFormModalClose();
         }
       });
@@ -552,7 +557,10 @@ export class RolesComponent implements OnInit, OnDestroy {
    */
   onFormModalSuccess(response: any): void {
     this.loadRoles();
-    // TODO: Show success toast
+    const message = this.formConfig.mode === 'create' 
+      ? 'Role created successfully' 
+      : 'Role updated successfully';
+    this.toastService.success(message);
   }
 
   /**
@@ -560,7 +568,7 @@ export class RolesComponent implements OnInit, OnDestroy {
    */
   onFormModalError(error: any): void {
     console.error('Form error:', error);
-    // TODO: Show error toast
+    this.toastService.error(error);
   }
 
   /**
