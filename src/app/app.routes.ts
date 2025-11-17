@@ -38,7 +38,7 @@ export const routes: Routes = [
         path: 'dashboard',
         component: EcommerceComponent,
         pathMatch: 'full',
-        title: 'Dashboard | RBAC System',
+        title: 'Dashboard | RBAC',
       },
       {
         path:'calendar',
@@ -48,37 +48,37 @@ export const routes: Routes = [
       {
         path:'profile',
         component:ProfileComponent,
-        title:'Profile | RBAC System'
+        title:'Profile | RBAC'
       },
       {
         path:'modules',
         component:ModulesComponent,
-        title:'Modules | RBAC System'
+        title:'Modules | RBAC'
       },
       {
         path:'entities',
         component:EntitiesComponent,
-        title:'Entities | RBAC System'
+        title:'Entities | RBAC'
       },
       {
         path:'roles',
         component:RolesComponent,
-        title:'Roles | RBAC System'
+        title:'Roles | RBAC'
       },
       {
         path:'users',
         component:UsersComponent,
-        title:'Users | RBAC System'
+        title:'Users | RBAC'
       },
       {
         path:'meter',
         component:MeterComponent,
-        title:'Meters | RBAC System'
+        title:'Meters | RBAC'
       },
       {
         path:'profiles',
         component:ProfilesComponent,
-        title:'Profiles | RBAC System'
+        title:'Profiles | RBAC'
       },
       {
         path:'form-elements',
