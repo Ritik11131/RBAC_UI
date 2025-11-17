@@ -35,7 +35,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children:[
       {
-        path: '',
+        path: 'dashboard',
         component: EcommerceComponent,
         pathMatch: 'full',
         title: 'Dashboard | RBAC System',

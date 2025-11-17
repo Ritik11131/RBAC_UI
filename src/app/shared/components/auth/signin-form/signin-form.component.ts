@@ -70,7 +70,7 @@ export class SigninFormComponent {
         this.isLoading = false;
         if (response.success) {
           // Get return URL from query params or default to dashboard
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
           this.router.navigate([returnUrl]);
         }
       },

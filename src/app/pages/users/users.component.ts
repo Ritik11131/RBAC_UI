@@ -11,7 +11,7 @@ import { formatDateMedium } from '../../shared/utils/date.util';
 import { GenericFormModalComponent } from '../../shared/components/form/generic-form-modal/generic-form-modal.component';
 import { FormFieldConfig, GenericFormConfig } from '../../core/interfaces/form-config.interface';
 import { Validators } from '@angular/forms';
-import { createEntityIdField } from '../../shared/utils/form-field-helpers';
+import { createEntityIdField, createRoleIdField } from '../../shared/utils/form-field-helpers';
 import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
@@ -169,6 +169,16 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.toastService.warning('Entity creation from user form');
         }
       ),
+      // Role selection at the top (required)
+      createRoleIdField(
+        async (page: number, limit: number, search?: string) => {
+          return this.loadRoleOptions(page, limit, search);
+        },
+        () => {
+          // Role creation from user form - could be handled if needed
+          this.toastService.warning('Role creation from user form');
+        }
+      ),
       {
         key: 'email',
         label: 'Email',
@@ -207,31 +217,11 @@ export class UsersComponent implements OnInit, OnDestroy {
         label: 'Mobile Number',
         type: 'tel',
         placeholder: 'Enter mobile number',
-        required: false,
+        required: true,
         validators: [Validators.pattern(/^[0-9]{10}$/)],
         gridCols: 12,
         order: 5,
         hint: 'Enter a 10-digit mobile number',
-      },
-      {
-        key: 'role_id',
-        label: 'Role',
-        type: 'paginated-select',
-        placeholder: 'Select a role',
-        required: true,
-        validators: [Validators.required],
-        gridCols: 12,
-        order: 6,
-        hint: 'Select a role for this user',
-        paginatedSelectConfig: {
-          loadOptions: async (page: number, limit: number, search?: string) => {
-            return this.loadRoleOptions(page, limit, search);
-          },
-          searchPlaceholder: 'Search roles...',
-          itemsPerPage: 10,
-          showSearch: true,
-          allowCreate: false,
-        },
       },
     ];
 
