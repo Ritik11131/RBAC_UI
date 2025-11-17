@@ -16,11 +16,14 @@ export interface Permission {
 export interface Role {
   id: string;
   name: string;
-  entityId: string;
+  entity_id: string;
   permissions?: Permission[];
   created_by?: string;
   creation_time?: string;
   last_update_on?: string;
+  attributes?: {
+    roles?: Permission[];
+  };
 }
 
 /**

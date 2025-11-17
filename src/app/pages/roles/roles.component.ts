@@ -65,7 +65,7 @@ export class RolesComponent implements OnInit, OnDestroy {
       searchable: true,
     },
     {
-      key: 'entityId',
+      key: 'entity_id',
       label: 'Entity ID',
       sortable: true,
       searchable: true,
@@ -74,8 +74,13 @@ export class RolesComponent implements OnInit, OnDestroy {
       key: 'permissions',
       label: 'Permissions',
       sortable: false,
+      type: 'badge',
+      badgeColor: (item) => {
+        if (item.attributes?.roles?.length === 0) return 'error';
+        return 'success';
+      },
       render: (item) => {
-        const count = item.permissions?.length || 0;
+        const count = item.attributes?.roles?.length || 0;
         return `${count} permission${count !== 1 ? 's' : ''}`;
       },
     },
@@ -246,7 +251,7 @@ export class RolesComponent implements OnInit, OnDestroy {
       submitLabel: 'Create Role',
       cancelLabel: 'Cancel',
       mode: 'create',
-      modalWidth: 'w-full sm:w-[700px] md:w-[800px] lg:w-[900px]', // Wider modal for permissions
+      modalWidth: 'w-full sm:w-[400px] md:w-[500px]',
       onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data),
       onSuccess: (response) => {
         console.log('Role created successfully:', response);
@@ -449,9 +454,10 @@ export class RolesComponent implements OnInit, OnDestroy {
     console.log('Form submit - mode:', this.formConfig.mode, 'currentEditRole:', this.currentEditRole);
     
     // Prepare payload
+    // Map entity_id from form to entityId for API
     const payload: RolePayload = {
       name: data.name || '',
-      entityId: data.entityId || '',
+      entityId: (data as any).entity_id || '',
       permissions: (data.permissions && Array.isArray(data.permissions)) 
         ? data.permissions.filter(p => p.read || p.write) // Only include permissions with at least read or write
         : [],
@@ -512,7 +518,7 @@ export class RolesComponent implements OnInit, OnDestroy {
               fields: updatedFields,
               initialData: {
                 name: roleData.name,
-                entityId: roleData.entityId,
+                entity_id: roleData.entity_id, // Map entityId to entity_id for form field
                 permissions: roleData.permissions || [],
               } as any,
               onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved

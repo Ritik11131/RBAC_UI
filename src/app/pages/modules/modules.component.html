@@ -22,6 +22,7 @@
   <app-generic-form-modal
     [isOpen]="isFormModalOpen"
     [config]="formConfig"
+    [isLoading]="isLoadingEditData"
     (close)="onFormModalClose()"
     (success)="onFormModalSuccess($event)"
     (error)="onFormModalError($event)"

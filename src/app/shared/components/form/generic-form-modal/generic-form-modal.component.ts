@@ -41,8 +41,8 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
 
         <!-- Form Content - Scrollable -->
         <div class="flex-1 overflow-y-auto px-6 py-6">
-          @if (isLoading) {
-            <app-spinner size="md" [showText]="true" text="Loading..." />
+          @if (isFormLoading) {
+            <app-spinner size="md" [showText]="true" [text]="isLoading ? 'Loading data...' : 'Submitting...'" />
           } @else {
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-12">
               @for (field of visibleFields; track field.key) {
@@ -100,7 +100,7 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
                       <app-paginated-select
                         [config]="getPaginatedSelectConfig(field)"
                         [value]="form.get(field.key)?.value"
-                        [disabled]="field.disabled || isLoading"
+                        [disabled]="field.disabled || isFormLoading"
                         [error]="!!fieldErrors.get(field.key)"
                         [placeholder]="field.placeholder || 'Select an option'"
                         (valueChange)="onPaginatedSelectChange(field.key, $event)"
@@ -164,16 +164,16 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
               size="sm" 
               variant="outline" 
               (btnClick)="onClose()"
-              [disabled]="isLoading"
+              [disabled]="isFormLoading"
             >
               {{ config.cancelLabel || 'Cancel' }}
             </app-button>
             <app-button 
               size="sm" 
               type="submit"
-              [disabled]="form.invalid || isLoading"
+              [disabled]="form.invalid || isFormLoading"
             >
-              @if (isLoading) {
+              @if (_isSubmitting) {
                 <span class="flex items-center gap-2">
                   <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -199,13 +199,14 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
 
   @Input() isOpen: boolean = false;
   @Input() config!: GenericFormConfig<T>;
+  @Input() isLoading: boolean = false; // External loading state (e.g., for edit data fetching)
   
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<any>();
   @Output() error = new EventEmitter<any>();
 
   form!: FormGroup;
-  private _isLoading = false;
+  _isSubmitting = false; // Internal loading state for form submission (public for template access)
   sortedFields: FormFieldConfig[] = [];
   
   // Optimized: Pre-computed properties to avoid function calls in template
@@ -213,22 +214,15 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
   fieldErrors = new Map<string, string | undefined>();
   fieldGridClasses = new Map<string, string>();
 
-  get isLoading(): boolean {
-    return this._isLoading;
-  }
-
-  set isLoading(value: boolean) {
-    this._isLoading = value;
-    this.updateFormDisabledState();
-  }
-
-  ngOnInit(): void {
-    if (this.config) {
-      this.buildForm();
-    }
+  get isFormLoading(): boolean {
+    // Show loading if external loading (edit data) or internal submitting
+    return this.isLoading || this._isSubmitting;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isLoading']) {
+      this.updateFormDisabledState();
+    }
     if (changes['config'] && this.config) {
       if (!changes['config'].firstChange) {
         // If form already exists and only initialData changed, patch values instead of rebuilding
@@ -244,6 +238,16 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
     }
     if (changes['isOpen'] && changes['isOpen'].currentValue && this.config) {
       // Rebuild form when modal opens to ensure fresh state
+      // But skip if config was just changed (to avoid double build when opening modal after setting initialData)
+      const configJustChanged = changes['config'] && !changes['config'].firstChange;
+      if (!configJustChanged || !this.form) {
+        this.buildForm();
+      }
+    }
+  }
+
+  ngOnInit(): void {
+    if (this.config) {
       this.buildForm();
     }
   }
@@ -353,7 +357,7 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
         return;
       }
 
-      const shouldBeDisabled = field.disabled || this.isLoading;
+      const shouldBeDisabled = field.disabled || this.isFormLoading;
       
       if (shouldBeDisabled && control.enabled) {
         control.disable({ emitEvent: false });
@@ -465,7 +469,7 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
       return;
     }
 
-    this.isLoading = true;
+    this._isSubmitting = true;
     const formValue = this.form.getRawValue();
 
     // Call the submit handler
@@ -473,7 +477,7 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.isLoading = false;
+          this._isSubmitting = false;
           this.success.emit(response);
           if (this.config.onSuccess) {
             this.config.onSuccess(response);
@@ -481,7 +485,7 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
           this.onClose();
         },
         error: (error) => {
-          this.isLoading = false;
+          this._isSubmitting = false;
           this.error.emit(error);
           if (this.config.onError) {
             this.config.onError(error);
