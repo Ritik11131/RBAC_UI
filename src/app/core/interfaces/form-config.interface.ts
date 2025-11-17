@@ -16,7 +16,8 @@ export type FormFieldType =
   | 'paginated-select'
   | 'checkbox' 
   | 'date' 
-  | 'time';
+  | 'time'
+  | 'permissions';
 
 /**
  * Select option interface
@@ -59,6 +60,9 @@ export interface FormFieldConfig {
   validators?: ValidatorFn[]; // Custom validators
   options?: SelectOption[]; // Options for select/radio fields
   paginatedSelectConfig?: PaginatedSelectConfig; // Configuration for paginated-select type
+  permissionsConfig?: {
+    modules: any[]; // Array of modules for permissions selector
+  }; // Configuration for permissions type
   hint?: string; // Help text
   errorMessage?: string; // Custom error message
   gridCols?: number; // Grid columns (1-12, default: 12)

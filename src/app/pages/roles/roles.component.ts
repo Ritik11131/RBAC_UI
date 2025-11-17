@@ -53,9 +53,8 @@ export class RolesComponent implements OnInit, OnDestroy {
   currentEditRole: Role | null = null;
   isLoadingEditData = false;
 
-  // Available modules and entities for form
+  // Available modules for permissions selector
   availableModules: Module[] = [];
-  availableEntities: Entity[] = [];
 
   // Table column definitions
   columns: TableColumn<Role>[] = [
@@ -148,42 +147,62 @@ export class RolesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load modules and entities for form dropdowns
+   * Load modules for permissions selector
+   * Note: Entities are loaded via paginated-select component, no need to load here
    */
   private loadModulesAndEntities(): void {
-    // Load modules
-    this.modulesService.getModules({ limit: 100 })
+    // Load modules for permissions selector
+    this.modulesService.getModules({ page: 1, limit: 100 })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
             this.availableModules = response.data;
+            // Update form config with loaded modules
+            if (this.formConfig) {
+              this.updateFormConfigModules();
+            }
           }
         },
         error: (error) => {
           console.error('Error loading modules:', error);
         }
       });
+  }
 
-    // Load entities
-    this.entitiesService.getEntities({ limit: 100 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.availableEntities = response.data;
-          }
-        },
-        error: (error) => {
-          console.error('Error loading entities:', error);
-        }
-      });
+  /**
+   * Update form config with current modules
+   */
+  private updateFormConfigModules(): void {
+    if (this.formConfig && this.formConfig.fields) {
+      const permissionsField = this.formConfig.fields.find(f => f.key === 'permissions');
+      if (permissionsField) {
+        permissionsField.permissionsConfig = {
+          modules: this.availableModules,
+        };
+      }
+    }
   }
 
   /**
    * Initialize form configuration for roles
    */
   private initializeFormConfig(): void {
+    // Update permissions field with current modules
+    const updateFields = (fields: FormFieldConfig[]): FormFieldConfig[] => {
+      return fields.map(field => {
+        if (field.key === 'permissions') {
+          return {
+            ...field,
+            permissionsConfig: {
+              modules: this.availableModules,
+            },
+          };
+        }
+        return field;
+      });
+    };
+
     const fields: FormFieldConfig[] = [
       // Entity selection at the top (required)
       createEntityIdField(
@@ -206,16 +225,28 @@ export class RolesComponent implements OnInit, OnDestroy {
         order: 2,
         hint: 'Enter a unique name for the role',
       },
+      {
+        key: 'permissions',
+        label: 'Permissions',
+        type: 'permissions',
+        required: false,
+        gridCols: 12,
+        order: 3,
+        hint: 'Select read and write permissions for each module',
+        permissionsConfig: {
+          modules: this.availableModules,
+        },
+      },
     ];
 
     this.formConfig = {
       title: 'Create Role',
       subtitle: 'Add a new role with permissions',
-      fields,
+      fields: updateFields(fields),
       submitLabel: 'Create Role',
       cancelLabel: 'Cancel',
       mode: 'create',
-      modalWidth: 'w-full sm:w-[500px] md:w-[600px]',
+      modalWidth: 'w-full sm:w-[700px] md:w-[800px] lg:w-[900px]', // Wider modal for permissions
       onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data),
       onSuccess: (response) => {
         console.log('Role created successfully:', response);
@@ -277,9 +308,12 @@ export class RolesComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(searchTerm => {
-      this.searchTerm = searchTerm;
-      this.currentPage = 1; // Reset to first page on search
-      this.loadRoles();
+      // Only trigger if search term actually changed
+      if (this.searchTerm !== searchTerm) {
+        this.searchTerm = searchTerm;
+        this.currentPage = 1; // Reset to first page on search
+        this.loadRoles();
+      }
     });
   }
 
@@ -415,12 +449,12 @@ export class RolesComponent implements OnInit, OnDestroy {
     console.log('Form submit - mode:', this.formConfig.mode, 'currentEditRole:', this.currentEditRole);
     
     // Prepare payload
-    // TODO: Add permissions UI component to handle permissions array
-    // For now, using empty permissions array - will be enhanced later
     const payload: RolePayload = {
       name: data.name || '',
       entityId: data.entityId || '',
-      permissions: [], // TODO: Get from permissions selector component
+      permissions: (data.permissions && Array.isArray(data.permissions)) 
+        ? data.permissions.filter(p => p.read || p.write) // Only include permissions with at least read or write
+        : [],
     };
 
     if (this.formConfig.mode === 'update' && this.currentEditRole) {
@@ -460,13 +494,26 @@ export class RolesComponent implements OnInit, OnDestroy {
           if (response.success && response.data) {
             const roleData = response.data;
             // Update form config with fetched data - preserve onSubmit handler
-            // Note: Permissions will be handled separately in a future enhancement
+            // Ensure permissions field has modules
+            const updatedFields = this.formConfig.fields.map(field => {
+              if (field.key === 'permissions') {
+                return {
+                  ...field,
+                  permissionsConfig: {
+                    modules: this.availableModules,
+                  },
+                };
+              }
+              return field;
+            });
+
             this.formConfig = {
               ...this.formConfig,
+              fields: updatedFields,
               initialData: {
                 name: roleData.name,
                 entityId: roleData.entityId,
-                // permissions: roleData.permissions || [], // TODO: Handle permissions separately
+                permissions: roleData.permissions || [],
               } as any,
               onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
             };

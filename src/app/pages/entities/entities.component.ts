@@ -245,9 +245,12 @@ export class EntitiesComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(searchTerm => {
-      this.searchTerm = searchTerm;
-      this.currentPage = 1; // Reset to first page on search
-      this.loadEntities();
+      // Only trigger if search term actually changed
+      if (this.searchTerm !== searchTerm) {
+        this.searchTerm = searchTerm;
+        this.currentPage = 1; // Reset to first page on search
+        this.loadEntities();
+      }
     });
   }
 

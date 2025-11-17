@@ -337,9 +337,12 @@ export class UsersComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(searchTerm => {
-      this.searchTerm = searchTerm;
-      this.currentPage = 1; // Reset to first page on search
-      this.loadUsers();
+      // Only trigger if search term actually changed
+      if (this.searchTerm !== searchTerm) {
+        this.searchTerm = searchTerm;
+        this.currentPage = 1; // Reset to first page on search
+        this.loadUsers();
+      }
     });
   }
 
