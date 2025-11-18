@@ -10,51 +10,68 @@ import { Permission } from '../../../../core/interfaces/role.interface';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CheckboxComponent],
   template: `
-    <div class="space-y-4">
+    <div class="flex flex-col">
       @if (modules && modules.length > 0) {
-        @for (module of modules; track module.id) {
-          <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-            <div class="mb-3">
-              <h4 class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ module.name }}</h4>
-            </div>
-            <div class="flex items-center gap-6">
-              <div class="flex items-center gap-2">
-                <app-checkbox
-                  [checked]="getPermissionValue(module.id, 'read')"
-                  (checkedChange)="onPermissionChange(module.id, 'read', $event)"
-                  [disabled]="disabled"
-                  className="w-4 h-4 rounded"
-                />
-                <label 
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-                  [class.cursor-not-allowed]="disabled"
-                  [class.opacity-50]="disabled"
-                  (click)="togglePermission(module.id, 'read')"
-                >
-                  Read
-                </label>
+        <!-- Header with count -->
+        <div class="mb-3 flex items-center justify-between">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Select Permissions ({{ modules.length }} {{ modules.length === 1 ? 'module' : 'modules' }})
+          </p>
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            {{ selectedCount }} selected
+          </span>
+        </div>
+        
+        <!-- Scrollable container with fixed height -->
+        <div class="max-h-[400px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+          <div class="space-y-3">
+            @for (module of modules; track module.id) {
+              <div class="rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600">
+                <div class="mb-3">
+                  <h4 class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ module.name }}</h4>
+                </div>
+                <div class="flex items-center gap-6">
+                  <div class="flex items-center gap-2">
+                    <app-checkbox
+                      [checked]="getPermissionValue(module.id, 'read')"
+                      (checkedChange)="onPermissionChange(module.id, 'read', $event)"
+                      [disabled]="disabled"
+                      className="w-4 h-4 rounded"
+                    />
+                    <label 
+                      class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none"
+                      [class.cursor-not-allowed]="disabled"
+                      [class.opacity-50]="disabled"
+                      (click)="togglePermission(module.id, 'read')"
+                    >
+                      Read
+                    </label>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <app-checkbox
+                      [checked]="getPermissionValue(module.id, 'write')"
+                      (checkedChange)="onPermissionChange(module.id, 'write', $event)"
+                      [disabled]="disabled"
+                      className="w-4 h-4 rounded"
+                    />
+                    <label 
+                      class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none"
+                      [class.cursor-not-allowed]="disabled"
+                      [class.opacity-50]="disabled"
+                      (click)="togglePermission(module.id, 'write')"
+                    >
+                      Write
+                    </label>
+                  </div>
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <app-checkbox
-                  [checked]="getPermissionValue(module.id, 'write')"
-                  (checkedChange)="onPermissionChange(module.id, 'write', $event)"
-                  [disabled]="disabled"
-                  className="w-4 h-4 rounded"
-                />
-                <label 
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-                  [class.cursor-not-allowed]="disabled"
-                  [class.opacity-50]="disabled"
-                  (click)="togglePermission(module.id, 'write')"
-                >
-                  Write
-                </label>
-              </div>
-            </div>
+            }
           </div>
-        }
+        </div>
       } @else {
-        <p class="text-sm text-gray-500 dark:text-gray-400">No modules available</p>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
+          <p class="text-sm text-gray-500 dark:text-gray-400">No modules available</p>
+        </div>
       }
     </div>
   `,
@@ -78,6 +95,11 @@ export class PermissionsSelectorComponent implements ControlValueAccessor, OnIni
   // Getter for template access
   get disabled(): boolean {
     return this._disabled;
+  }
+
+  // Computed property for selected count (optimized for template)
+  get selectedCount(): number {
+    return this.permissions.filter(p => p.read || p.write).length;
   }
 
   ngOnInit(): void {
@@ -168,6 +190,7 @@ export class PermissionsSelectorComponent implements ControlValueAccessor, OnIni
     const currentValue = this.getPermissionValue(moduleId, type);
     this.onPermissionChange(moduleId, type, !currentValue);
   }
+
 
   /**
    * Notify parent form of changes

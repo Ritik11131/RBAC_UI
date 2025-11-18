@@ -16,19 +16,21 @@
     <div>
       <app-label>Phone</app-label>
       <app-phone-input
+        [formControl]="phoneStart"
         [selectPosition]="'start'"
         [countries]="countries"
-        placeholder="+1 (555) 000-0000"
-        (phoneChange)="handlePhoneNumberChange($event)"
+        [defaultCountry]="'IN'"
+        placeholder="Enter phone number"
       />
     </div>
     <div>
       <app-label>Phone</app-label>
       <app-phone-input
+        [formControl]="phoneEnd"
         [selectPosition]="'end'"
         [countries]="countries"
-         placeholder="+1 (555) 000-0000"
-        (phoneChange)="handlePhoneNumberChange($event)"
+        [defaultCountry]="'IN'"
+        placeholder="Enter phone number"
       />
     </div>
   </div>

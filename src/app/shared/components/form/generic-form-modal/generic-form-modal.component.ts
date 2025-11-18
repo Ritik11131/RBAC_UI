@@ -8,6 +8,7 @@ import { ButtonComponent } from '../../ui/button/button.component';
 import { SpinnerComponent } from '../../common/spinner/spinner.component';
 import { PaginatedSelectComponent } from '../paginated-select/paginated-select.component';
 import { PermissionsSelectorComponent } from '../permissions-selector/permissions-selector.component';
+import { PhoneInputComponent } from '../group-input/phone-input/phone-input.component';
 import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../../../../core/interfaces/form-config.interface';
 
 @Component({
@@ -21,6 +22,7 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
     SpinnerComponent,
     PaginatedSelectComponent,
     PermissionsSelectorComponent,
+    PhoneInputComponent,
   ],
   template: `
     <app-modal
@@ -137,6 +139,21 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
                       <app-permissions-selector
                         [modules]="field.permissionsConfig?.modules || []"
                         [formControlName]="field.key"
+                      />
+                      @if (field.hint && !fieldErrors.get(field.key)) {
+                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>
+                      }
+                      @if (fieldErrors.get(field.key)) {
+                        <p class="mt-1.5 text-xs text-error-500">{{ fieldErrors.get(field.key) }}</p>
+                      }
+                    }
+                    @case ('tel') {
+                      <app-phone-input
+                        [formControlName]="field.key"
+                        [placeholder]="field.placeholder || 'Enter phone number'"
+                        [selectPosition]="'start'"
+                        [defaultCountry]="'IN'"
+                        [error]="!!fieldErrors.get(field.key)"
                       />
                       @if (field.hint && !fieldErrors.get(field.key)) {
                         <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>

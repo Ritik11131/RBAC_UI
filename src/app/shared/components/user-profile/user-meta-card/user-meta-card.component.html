@@ -191,7 +191,11 @@
           </div>
           <div>
             <app-label>Phone</app-label>
-            <input type="text" formControlName="phone" class="h-11 w-full rounded-lg border border-gray-300 appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 focus:border-brand-300 focus:ring-brand-500/20" />
+            <app-phone-input
+              formControlName="phone"
+              [defaultCountry]="'IN'"
+              placeholder="Enter phone number"
+            />
           </div>
           <div class="sm:col-span-2">
             <app-label>Bio</app-label>

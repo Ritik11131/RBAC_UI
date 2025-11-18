@@ -5,6 +5,7 @@ import { ModalComponent } from '../../ui/modal/modal.component';
 import { ButtonComponent } from '../../ui/button/button.component';
 import { LabelComponent } from '../../form/label/label.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
+import { PhoneInputComponent } from '../../form/group-input/phone-input/phone-input.component';
 import { UsersService } from '../../../../core/services/users.service';
 import { User, UserUpdatePayload } from '../../../../core/interfaces/user.interface';
 import { takeUntil } from 'rxjs/operators';
@@ -17,6 +18,7 @@ import { Subject } from 'rxjs';
     ReactiveFormsModule,
     ModalComponent,
     InputFieldComponent,
+    PhoneInputComponent,
     ButtonComponent,
     LabelComponent,
   ],
