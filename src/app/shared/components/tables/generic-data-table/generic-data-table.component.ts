@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy, TrackByFunction, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy, TrackByFunction, inject, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BadgeComponent } from '../../ui/badge/badge.component';
 import { ButtonComponent } from '../../ui/button/button.component';
@@ -111,6 +111,9 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
   sortColumn: string | null = null;
   sortDirection: SortDirection = null;
   showAllEntities = true; // Entity filter state
+  isItemsPerPageDropdownOpen = false; // Dropdown state for items per page
+
+  @ViewChild('itemsPerPageDropdown', { static: false }) itemsPerPageDropdown!: ElementRef;
 
   // Default config
   private defaultConfig: TableConfig = {
@@ -297,6 +300,16 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     return 'info';
   }
 
+  toggleItemsPerPageDropdown(): void {
+    this.isItemsPerPageDropdownOpen = !this.isItemsPerPageDropdownOpen;
+  }
+
+  selectItemsPerPage(value: number): void {
+    this.itemsPerPage = value;
+    this.isItemsPerPageDropdownOpen = false;
+    this.onItemsPerPageChangeHandler();
+  }
+
   onItemsPerPageChangeHandler() {
     this.currentPage = 1;
     this.selectedItems.clear();
@@ -305,6 +318,14 @@ export class GenericDataTableComponent<T = any> implements OnInit, OnChanges {
     
     if (this.serverSidePagination) {
       this.pageChange.emit(this.currentPage);
+    }
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onItemsPerPageDropdownClickOutside(event: MouseEvent): void {
+    if (this.itemsPerPageDropdown && !this.itemsPerPageDropdown.nativeElement.contains(event.target)) {
+      this.isItemsPerPageDropdownOpen = false;
     }
   }
 
