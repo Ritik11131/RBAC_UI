@@ -5,7 +5,7 @@ import { PageBreadcrumbComponent } from '../../shared/components/common/page-bre
 import { GenericDataTableComponent, TableColumn, TableAction, TableConfig } from '../../shared/components/tables/generic-data-table/generic-data-table.component';
 import { RolesService } from '../../core/services/roles.service';
 import { EntitiesService } from '../../core/services/entities.service';
-import { ModulesService } from '../../core/services/modules.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Role, RolePaginationParams, RolePayload, Permission } from '../../core/interfaces/role.interface';
 import { Entity } from '../../core/interfaces/entity.interface';
 import { Module } from '../../core/interfaces/module.interface';
@@ -31,7 +31,7 @@ export class RolesComponent implements OnInit, OnDestroy {
   private rolesService = inject(RolesService);
   private toastService = inject(ToastService);
   private entitiesService = inject(EntitiesService);
-  private modulesService = inject(ModulesService);
+  private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -155,27 +155,37 @@ export class RolesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load modules for permissions selector
+   * Load modules from decoded token permissions (RBAC approach)
    * Note: Entities are loaded via paginated-select component, no need to load here
    */
   private loadModulesAndEntities(): void {
-    // Load modules for permissions selector
-    this.modulesService.getModules({ page: 1, limit: 100 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.availableModules = response.data;
-            // Update form config with loaded modules
-            if (this.formConfig) {
-              this.updateFormConfigModules();
-            }
-          }
-        },
-        error: (error) => {
-          console.error('Error loading modules:', error);
-        }
-      });
+    // Get modules from decoded token permissions
+    const permissions = this.authService.getPermissions();
+    
+    if (!permissions || permissions.length === 0) {
+      console.warn('No permissions found in token. Cannot load modules for role creation.');
+      this.availableModules = [];
+      return;
+    }
+    
+    // Convert Permission[] to Module[] format
+    // Each permission in the token represents a module the user has access to
+    // Only id and name are actually used - super admins create/update modules,
+    // regular entities just use modules assigned to them in the decoded token
+    // The other fields (created_by, creation_time, last_update_on) are required by
+    // the Module interface but are not used by the permissions selector component
+    this.availableModules = permissions.map((permission): Module => ({
+      id: permission.moduleId,
+      name: permission.name,
+      created_by: '', // Not used - only super admins create modules
+      creation_time: '', // Not used - only super admins create modules
+      last_update_on: '', // Not used - only super admins create modules
+    }));
+
+    // Update form config with loaded modules
+    if (this.formConfig) {
+      this.updateFormConfigModules();
+    }
   }
 
   /**
@@ -398,18 +408,10 @@ export class RolesComponent implements OnInit, OnDestroy {
   }
 
   onActionClick(event: { action: string; item: Role }): void {
-    const { action, item } = event;
-    
-    switch (action) {
-      case 'Edit':
-        this.handleEdit(item);
-        break;
-      case 'Delete':
-        this.handleDelete(item);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
+    // Action handlers are already defined in the actions array (action.action callback)
+    // This method is kept for potential logging or side effects, but doesn't need to duplicate the handlers
+    // Removing duplicate calls to prevent double API calls
+    console.log('Action clicked:', event.action, event.item);
   }
 
   /**
@@ -519,13 +521,17 @@ export class RolesComponent implements OnInit, OnDestroy {
               return field;
             });
 
+            // Map permissions from attributes.roles (API response structure)
+            // The API returns permissions in attributes.roles array
+            const permissions = roleData.attributes?.roles || roleData.permissions || [];
+
             this.formConfig = {
               ...this.formConfig,
               fields: updatedFields,
               initialData: {
                 name: roleData.name,
                 entity_id: roleData.entity_id, // Map entityId to entity_id for form field
-                permissions: roleData.permissions || [],
+                permissions: permissions, // Use permissions from attributes.roles
               } as any,
               onSubmit: (data: Partial<RolePayload>) => this.handleFormSubmit(data), // Ensure onSubmit is preserved
             };

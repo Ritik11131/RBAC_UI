@@ -7,6 +7,7 @@ import { LabelComponent } from '../label/label.component';
 import { ButtonComponent } from '../../ui/button/button.component';
 import { SpinnerComponent } from '../../common/spinner/spinner.component';
 import { PaginatedSelectComponent } from '../paginated-select/paginated-select.component';
+import { PermissionsSelectorComponent } from '../permissions-selector/permissions-selector.component';
 import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../../../../core/interfaces/form-config.interface';
 
 @Component({
@@ -19,6 +20,7 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
     ButtonComponent,
     SpinnerComponent,
     PaginatedSelectComponent,
+    PermissionsSelectorComponent,
   ],
   template: `
     <app-modal
@@ -129,6 +131,18 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
                       </div>
                       @if (field.hint) {
                         <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>
+                      }
+                    }
+                    @case ('permissions') {
+                      <app-permissions-selector
+                        [modules]="field.permissionsConfig?.modules || []"
+                        [formControlName]="field.key"
+                      />
+                      @if (field.hint && !fieldErrors.get(field.key)) {
+                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>
+                      }
+                      @if (fieldErrors.get(field.key)) {
+                        <p class="mt-1.5 text-xs text-error-500">{{ fieldErrors.get(field.key) }}</p>
                       }
                     }
                     @default {
@@ -366,6 +380,9 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
         control.enable({ emitEvent: false });
       }
     });
+    
+    // Note: For ControlValueAccessor components (like permissions-selector),
+    // Angular automatically calls setDisabledState() when FormControl disabled state changes
   }
 
   /**

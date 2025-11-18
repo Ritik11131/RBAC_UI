@@ -581,18 +581,10 @@ export class ProfilesComponent implements OnInit, OnDestroy {
   }
 
   onActionClick(event: { action: string; item: Profile }): void {
-    const { action, item } = event;
-    
-    switch (action) {
-      case 'Edit':
-        this.handleEdit(item);
-        break;
-      case 'Delete':
-        this.handleDelete(item);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
+    // Action handlers are already defined in the actions array (action.action callback)
+    // This method is kept for potential logging or side effects, but doesn't need to duplicate the handlers
+    // Removing duplicate calls to prevent double API calls
+    console.log('Action clicked:', event.action, event.item);
   }
 
   /**
