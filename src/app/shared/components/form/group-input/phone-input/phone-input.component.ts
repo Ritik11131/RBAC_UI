@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, forwardRef, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, forwardRef, OnInit, OnChanges, SimpleChanges, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 
 export interface CountryCode {
@@ -34,6 +34,9 @@ export class PhoneInputComponent implements ControlValueAccessor, OnInit, OnChan
   selectedCountry: string = '';
   phoneNumber: string = '';
   private _disabled: boolean = false;
+  isDropdownOpen: boolean = false;
+
+  @ViewChild('dropdownContainer', { static: false }) dropdownContainer!: ElementRef;
 
   private onChange: ((value: string) => void) | null = null;
   private onTouched: (() => void) | null = null;
@@ -42,14 +45,7 @@ export class PhoneInputComponent implements ControlValueAccessor, OnInit, OnChan
   defaultCountries: CountryCode[] = [
     { code: 'IN', label: '+91', dialCode: '+91' },
     { code: 'US', label: '+1', dialCode: '+1' },
-    { code: 'GB', label: '+44', dialCode: '+44' },
-    { code: 'CA', label: '+1', dialCode: '+1' },
-    { code: 'AU', label: '+61', dialCode: '+61' },
-    { code: 'DE', label: '+49', dialCode: '+49' },
-    { code: 'FR', label: '+33', dialCode: '+33' },
-    { code: 'JP', label: '+81', dialCode: '+81' },
-    { code: 'CN', label: '+86', dialCode: '+86' },
-    { code: 'BR', label: '+55', dialCode: '+55' },
+
   ];
 
   get disabled(): boolean {
@@ -81,11 +77,29 @@ export class PhoneInputComponent implements ControlValueAccessor, OnInit, OnChan
     }
   }
 
-  handleCountryChange(event: Event): void {
+  toggleDropdown(): void {
     if (this._disabled) return;
-    const newCountry = (event.target as HTMLSelectElement).value;
-    this.selectedCountry = newCountry;
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
+  selectCountry(country: CountryCode): void {
+    if (this._disabled) return;
+    this.selectedCountry = country.code;
+    this.isDropdownOpen = false;
     this.emitValue();
+  }
+
+  getSelectedCountryLabel(): string {
+    const country = this.availableCountries.find(c => c.code === this.selectedCountry);
+    return country?.label || '+91';
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: MouseEvent): void {
+    if (this.dropdownContainer && !this.dropdownContainer.nativeElement.contains(event.target)) {
+      this.isDropdownOpen = false;
+    }
   }
 
   handlePhoneNumberChange(event: Event): void {
