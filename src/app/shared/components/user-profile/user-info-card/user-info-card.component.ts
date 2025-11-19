@@ -15,7 +15,7 @@ import { Subject } from 'rxjs';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    InputFieldComponent,
+    // InputFieldComponent,
     ButtonComponent,
     LabelComponent,
     ModalComponent,

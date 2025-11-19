@@ -1,0 +1,52 @@
+<div class="entity-hierarchy-node" [style.padding-left.px]="level * 20">
+  <div 
+    [class]="'flex items-center gap-2 p-2 rounded-lg transition-colors ' + 
+      (node.isSelected 
+        ? 'bg-brand-100 dark:bg-brand-900/40 border-2 border-brand-500 dark:border-brand-400' 
+        : 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800')">
+    <div class="flex-shrink-0">
+      <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-blue-600 dark:text-blue-400">
+          <path d="M3 7V5C3 3.89543 3.89543 3 5 3H9C10.1046 3 11 3.89543 11 5V7M3 7H21M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M21 7V5C21 3.89543 20.1046 3 19 3H15C13.8954 3 13 3.89543 13 5V7M7 3V7M17 3V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+        {{ node.name }}
+        @if (node.isSelected) {
+          <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500 text-white">Selected</span>
+        }
+      </div>
+      @if (node.email_id) {
+        <div class="text-xs text-gray-500 dark:text-gray-400">{{ node.email_id }}</div>
+      }
+    </div>
+    @if (hasChildren()) {
+      <button 
+        (click)="toggleNode(node.id)"
+        class="flex-shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+        <svg 
+          [class.rotate-90]="isExpanded(node.id)"
+          width="16" 
+          height="16" 
+          viewBox="0 0 16 16" 
+          fill="none"
+          class="text-gray-500 dark:text-gray-400 transition-transform">
+          <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    }
+  </div>
+  @if (hasChildren() && isExpanded(node.id)) {
+    <div class="mt-1 ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+      @for (child of getChildren(); track child.id) {
+        <app-entity-hierarchy-node 
+          [node]="child" 
+          [level]="level + 1">
+        </app-entity-hierarchy-node>
+      }
+    </div>
+  }
+</div>
+
