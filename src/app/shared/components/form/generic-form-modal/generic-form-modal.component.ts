@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Observable, Subject, takeUntil } from 'rxjs';
@@ -78,21 +78,65 @@ import { FormFieldConfig, GenericFormConfig, PaginatedSelectConfig } from '../..
                       }
                     }
                     @case ('select') {
-                      <select
-                        [formControlName]="field.key"
-                        class="h-11 w-full appearance-none rounded-lg border bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                        [ngClass]="{
-                          'border-error-500': fieldErrors.get(field.key),
-                          'border-gray-300': !fieldErrors.get(field.key)
-                        }"
-                      >
-                        <option value="" disabled>{{ field.placeholder || 'Select an option' }}</option>
-                        @for (option of field.options; track option.value) {
-                          <option [value]="option.value" [disabled]="option.disabled">
-                            {{ option.label }}
-                          </option>
+                      <div class="relative">
+                        <!-- Selected Value Display Button -->
+                        <button
+                          type="button"
+                          (click)="toggleSelectDropdown(field.key)"
+                          [disabled]="field.disabled || isFormLoading"
+                          class="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 flex items-center justify-between"
+                          [ngClass]="{
+                            'border-error-500': fieldErrors.get(field.key),
+                            'border-gray-300': !fieldErrors.get(field.key),
+                            'opacity-50 cursor-not-allowed': field.disabled || isFormLoading
+                          }"
+                        >
+                          <span [ngClass]="{'text-gray-400': !getSelectedOptionLabel(field)}">
+                            {{ getSelectedOptionLabel(field) || field.placeholder || 'Select an option' }}
+                          </span>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="stroke-current transition-transform flex-shrink-0"
+                            [ngClass]="{'rotate-180': openSelectDropdowns.has(field.key)}"
+                          >
+                            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"></path>
+                          </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        @if (openSelectDropdowns.has(field.key)) {
+                          <div class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-hidden flex flex-col">
+                            <!-- Options List -->
+                            <div class="flex-1 overflow-y-auto">
+                              @if (field.options && field.options.length > 0) {
+                                @for (option of field.options; track option.value) {
+                                  <button
+                                    type="button"
+                                    (click)="selectOption(field.key, option.value)"
+                                    [disabled]="option.disabled"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    [ngClass]="{
+                                      'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400': form.get(field.key)?.value === option.value,
+                                      'text-gray-700 dark:text-gray-300': form.get(field.key)?.value !== option.value,
+                                      'opacity-50 cursor-not-allowed': option.disabled
+                                    }"
+                                  >
+                                    {{ option.label }}
+                                  </button>
+                                }
+                              } @else {
+                                <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                  No options available
+                                </div>
+                              }
+                            </div>
+                          </div>
                         }
-                      </select>
+                      </div>
                       @if (field.hint && !fieldErrors.get(field.key)) {
                         <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ field.hint }}</p>
                       }
@@ -244,6 +288,9 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
   visibleFields: FormFieldConfig[] = [];
   fieldErrors = new Map<string, string | undefined>();
   fieldGridClasses = new Map<string, string>();
+  
+  // Track open select dropdowns
+  openSelectDropdowns = new Set<string>();
 
   get isFormLoading(): boolean {
     // Show loading if external loading (edit data) or internal submitting
@@ -490,6 +537,61 @@ export class GenericFormModalComponent<T = any> implements OnInit, OnDestroy, On
   onPaginatedSelectCreate(field: FormFieldConfig): void {
     if (field.paginatedSelectConfig?.onCreateClick) {
       field.paginatedSelectConfig.onCreateClick();
+    }
+  }
+
+  /**
+   * Toggle select dropdown
+   */
+  toggleSelectDropdown(fieldKey: string): void {
+    if (this.openSelectDropdowns.has(fieldKey)) {
+      this.openSelectDropdowns.delete(fieldKey);
+    } else {
+      // Close all other dropdowns first
+      this.openSelectDropdowns.clear();
+      this.openSelectDropdowns.add(fieldKey);
+    }
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Select an option from dropdown
+   */
+  selectOption(fieldKey: string, value: string | number): void {
+    const control = this.form.get(fieldKey);
+    if (control) {
+      control.setValue(value);
+      control.markAsTouched();
+      this.openSelectDropdowns.delete(fieldKey);
+      this.updateFieldProperties();
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Get selected option label
+   */
+  getSelectedOptionLabel(field: FormFieldConfig): string | null {
+    const value = this.form.get(field.key)?.value;
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const option = field.options?.find(opt => opt.value === value);
+    return option?.label || null;
+  }
+
+  /**
+   * Close dropdowns when clicking outside
+   */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    // Check if click is outside any select dropdown button or menu
+    const clickedInsideDropdown = target.closest('.relative') && 
+                                  (target.closest('button[type="button"]') || target.closest('.absolute.z-50'));
+    if (!clickedInsideDropdown && this.openSelectDropdowns.size > 0) {
+      this.openSelectDropdowns.clear();
+      this.cdr.markForCheck();
     }
   }
 

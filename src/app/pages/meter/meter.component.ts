@@ -184,12 +184,18 @@ export class MeterComponent implements OnInit, OnDestroy {
       {
         key: 'meter_type',
         label: 'Meter Type',
-        type: 'text',
-        placeholder: 'Enter meter type (e.g., PHYSICAL, VIRTUAL)',
-        required: false,
+        type: 'select',
+        placeholder: 'Select meter type',
+        required: true,
+        validators: [Validators.required],
+        options: [
+          { value: 'PHYSICAL', label: 'PHYSICAL' },
+          { value: 'VIRTUAL', label: 'VIRTUAL' },
+          { value: 'GROUP', label: 'GROUP' },
+        ],
         gridCols: 12,
         order: 3,
-        hint: 'Type of meter (e.g., PHYSICAL, VIRTUAL)',
+        hint: 'Select the type of meter',
       },
       {
         key: 'tb_ref_id',
