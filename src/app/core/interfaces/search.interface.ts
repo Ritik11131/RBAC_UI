@@ -2,6 +2,7 @@ import { Entity } from './entity.interface';
 import { User } from './user.interface';
 import { Profile } from './profile.interface';
 import { Role } from './role.interface';
+import { Meter } from './meter.interface';
 import { PaginationMeta } from './module.interface';
 
 /**
@@ -23,6 +24,7 @@ export interface GlobalSearchResponse {
   users: PaginatedSearchResult<User>;
   profiles: PaginatedSearchResult<Profile>;
   roles: PaginatedSearchResult<Role>;
+  meters: PaginatedSearchResult<Meter>;
   pagination: {
     totalResults: number;
     hasMore: boolean;
@@ -41,23 +43,19 @@ export interface GlobalSearchApiResponse {
 }
 
 /**
- * Hierarchy node for entities (with isSelected flag)
+ * Path item in the linear path array
  */
-export interface EntityHierarchyNode extends Entity {
-  isSelected?: boolean;
-  children?: EntityHierarchyNode[];
-}
-
-/**
- * Hierarchy node for users (with isSelected flag)
- */
-export interface UserHierarchyNode extends User {
-  isSelected?: boolean;
-  children?: UserHierarchyNode[];
-  entity?: {
-    id: string;
-    name: string;
-  };
+export interface PathItem {
+  id: string;
+  name: string;
+  type: SearchType;
+  isSelected: boolean;
+  email_id?: string;
+  email?: string;
+  entityId?: string;
+  // Future-proof: Allow for expandable children if API adds pagination
+  hasChildren?: boolean;
+  childrenCount?: number;
 }
 
 /**
@@ -76,64 +74,75 @@ export interface SelectedResource {
   type: SearchType;
   id: string;
   name: string;
-  entityId?: string;
+  entityId?: string | null;
 }
 
 /**
- * Entity hierarchy response structure
+ * Entity path response structure (path-only, linear array)
  */
-export interface EntityHierarchyResponse {
+export interface EntityPathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
-  hierarchy: EntityHierarchyNode;
+  path: PathItem[];
 }
 
 /**
- * User hierarchy response structure
+ * User path response structure (path-only, linear arrays)
  */
-export interface UserHierarchyResponse {
+export interface UserPathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
-  entityHierarchy: EntityHierarchyNode;
-  userHierarchy: UserHierarchyNode;
+  entityPath: PathItem[];
+  userPath: PathItem[];
 }
 
 /**
- * Profile hierarchy response structure
+ * Profile path response structure (path-only, linear array)
  */
-export interface ProfileHierarchyResponse {
+export interface ProfilePathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
   profile: Profile;
-  entityHierarchy: EntityHierarchyNode;
+  path: PathItem[];
 }
 
 /**
- * Role hierarchy response structure
+ * Role path response structure (path-only, linear array)
  */
-export interface RoleHierarchyResponse {
+export interface RolePathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
   role: Role;
-  entityHierarchy: EntityHierarchyNode;
+  path: PathItem[];
 }
 
 /**
- * Union type for all hierarchy responses
+ * Meter path response structure (path-only, linear array)
  */
-export type HierarchyResponse = 
-  | EntityHierarchyResponse 
-  | UserHierarchyResponse 
-  | ProfileHierarchyResponse 
-  | RoleHierarchyResponse;
+export interface MeterPathResponse {
+  userEntity: UserEntityInfo;
+  selectedResource: SelectedResource;
+  meter: Meter;
+  path: PathItem[];
+}
 
 /**
- * Hierarchy API response
+ * Union type for all path responses
  */
-export interface HierarchyApiResponse {
+export type PathResponse = 
+  | EntityPathResponse 
+  | UserPathResponse 
+  | ProfilePathResponse 
+  | RolePathResponse
+  | MeterPathResponse;
+
+/**
+ * Path API response (hierarchy endpoint returns path)
+ */
+export interface PathApiResponse {
   success: boolean;
   message: string;
-  data: HierarchyResponse;
+  data: PathResponse;
   timestamp: number;
   path: string;
 }
@@ -141,7 +150,7 @@ export interface HierarchyApiResponse {
 /**
  * Search type filter
  */
-export type SearchType = 'entity' | 'user' | 'profile' | 'role';
+export type SearchType = 'entity' | 'user' | 'profile' | 'role' | 'meter';
 
 /**
  * Search parameters

@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, firstValueFrom, EMPTY } from 'rxjs';
 import { SearchService } from '../../../../core/services/search.service';
-import { GlobalSearchResponse, SearchType, HierarchyResponse } from '../../../../core/interfaces/search.interface';
-import { HierarchyTreeComponent } from './hierarchy-tree/hierarchy-tree.component';
+import { GlobalSearchResponse, SearchType, PathResponse } from '../../../../core/interfaces/search.interface';
+import { PathViewComponent } from './path-view/path-view.component';
 
 @Component({
   selector: 'app-global-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, HierarchyTreeComponent],
+  imports: [CommonModule, FormsModule, PathViewComponent],
   templateUrl: './global-search.component.html',
   styleUrls: ['./global-search.component.css']
 })
@@ -23,7 +23,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   isOpen = false;
-  selectedResult: { type: SearchType; id: string; hierarchyResponse: HierarchyResponse | null } | null = null;
+  selectedResult: { type: SearchType; id: string; pathResponse: PathResponse | null } | null = null;
   loadingHierarchy = false;
 
   private destroy$ = new Subject<void>();
@@ -101,17 +101,17 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
 
   async onResultClick(type: SearchType, id: string) {
     this.loadingHierarchy = true;
-    this.selectedResult = { type, id, hierarchyResponse: null };
+    this.selectedResult = { type, id, pathResponse: null };
 
     try {
       const response = await firstValueFrom(
-        this.searchService.getHierarchy(type, id).pipe(takeUntil(this.destroy$))
+        this.searchService.getPath(type, id).pipe(takeUntil(this.destroy$))
       );
       if (response?.data) {
-        this.selectedResult = { type, id, hierarchyResponse: response.data };
+        this.selectedResult = { type, id, pathResponse: response.data };
       }
     } catch (error: any) {
-      this.error = error.error?.error || 'Failed to load hierarchy.';
+      this.error = error.error?.error || 'Failed to load path.';
       this.selectedResult = null;
     } finally {
       this.loadingHierarchy = false;

@@ -1,0 +1,124 @@
+<div class="path-display-container">
+  @if (displayItems.length === 0) {
+    <div class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+      No path available
+    </div>
+  } @else {
+    <!-- Horizontal Path Display (Desktop) -->
+    <div class="hidden md:flex items-center gap-2 flex-wrap">
+      @for (displayItem of displayItems; track displayItem.item.id; let isLast = $last) {
+        <div class="flex items-center gap-2">
+          <div 
+            class="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+            [ngClass]="{
+              'bg-brand-100 dark:bg-brand-900/40 border-2 border-brand-500 dark:border-brand-400 shadow-md': displayItem.item.isSelected,
+              'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800': !displayItem.item.isSelected
+            }">
+            <div class="flex-shrink-0" [ngClass]="displayItem.bgColorClass">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" [ngClass]="displayItem.textColorClass" [innerHTML]="displayItem.iconHtml"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-white flex items-center gap-2 text-sm">
+                {{ displayItem.item.name }}
+                @if (displayItem.item.isSelected) {
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500 text-white">Selected</span>
+                }
+              </div>
+              @if (displayItem.item.email_id || displayItem.item.email) {
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                  {{ displayItem.item.email_id || displayItem.item.email }}
+                </div>
+              }
+              @if (displayItem.meterType) {
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                  {{ displayItem.meterType }}
+                </div>
+              }
+            </div>
+            @if (displayItem.canExpand) {
+              <button 
+                (click)="toggleExpand(displayItem.item.id)"
+                class="flex-shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+                <svg 
+                  [class.rotate-90]="displayItem.isExpanded"
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 16 16" 
+                  fill="none"
+                  class="text-gray-500 dark:text-gray-400 transition-transform">
+                  <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            }
+          </div>
+          @if (!isLast) {
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="text-gray-400 dark:text-gray-600 flex-shrink-0">
+              <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Vertical Path Display (Mobile) -->
+    <div class="flex md:hidden flex-col gap-3">
+      @for (displayItem of displayItems; track displayItem.item.id; let index = $index) {
+        <div class="flex items-start gap-3">
+          @if (index > 0) {
+            <div class="flex flex-col items-center mt-2">
+              <div class="w-0.5 h-6 bg-gray-300 dark:bg-gray-600"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 mt-1"></div>
+            </div>
+          } @else {
+            <div class="w-6"></div>
+          }
+          
+          <div 
+            class="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+            [ngClass]="{
+              'bg-brand-100 dark:bg-brand-900/40 border-2 border-brand-500 dark:border-brand-400 shadow-md': displayItem.item.isSelected,
+              'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800': !displayItem.item.isSelected
+            }">
+            <div class="flex-shrink-0" [ngClass]="displayItem.bgColorClass">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" [ngClass]="displayItem.textColorClass" [innerHTML]="displayItem.iconHtml"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-white flex items-center gap-2 text-sm">
+                {{ displayItem.item.name }}
+                @if (displayItem.item.isSelected) {
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500 text-white">Selected</span>
+                }
+              </div>
+              @if (displayItem.item.email_id || displayItem.item.email) {
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {{ displayItem.item.email_id || displayItem.item.email }}
+                </div>
+              }
+              @if (displayItem.meterType) {
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {{ displayItem.meterType }}
+                </div>
+              }
+            </div>
+            @if (displayItem.canExpand) {
+              <button 
+                (click)="toggleExpand(displayItem.item.id)"
+                class="flex-shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+                <svg 
+                  [class.rotate-90]="displayItem.isExpanded"
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 16 16" 
+                  fill="none"
+                  class="text-gray-500 dark:text-gray-400 transition-transform">
+                  <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+

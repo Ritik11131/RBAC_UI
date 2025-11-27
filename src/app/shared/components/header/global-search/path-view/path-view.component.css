@@ -1,0 +1,20 @@
+.path-view-container {
+  width: 100%;
+}
+
+.path-display-container {
+  width: 100%;
+}
+
+/* Smooth transitions for path items */
+.path-item {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Responsive path display */
+@media (max-width: 768px) {
+  .path-display-container {
+    padding: 0.5rem 0;
+  }
+}
+

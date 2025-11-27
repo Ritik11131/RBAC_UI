@@ -4,7 +4,7 @@ import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { 
   GlobalSearchApiResponse, 
-  HierarchyApiResponse, 
+  PathApiResponse, 
   SearchParams,
   SearchType 
 } from '../interfaces/search.interface';
@@ -44,45 +44,32 @@ export class SearchService {
   }
 
   /**
-   * Get hierarchy for a specific resource
+   * Get path for a specific resource (path-only, no siblings)
    * @param type Resource type
    * @param id Resource ID
-   * @param depth Optional depth limit
-   * @param paginateRootChildren Optional pagination for root children
-   * @param page Optional page number for paginated root children
-   * @param limit Optional limit for paginated root children
-   * @returns Observable of hierarchy data
+   * @returns Observable of path data (linear array)
+   * 
+   * Note: Currently returns path-only (no pagination support).
+   * Future-proof: Structure allows for potential pagination/expansion features.
    */
-  getHierarchy(
+  getPath(
     type: SearchType,
-    id: string,
-    depth?: number,
-    paginateRootChildren?: boolean,
-    page?: number,
-    limit?: number
-  ): Observable<HierarchyApiResponse> {
-    let httpParams = new HttpParams();
-
-    if (depth !== undefined) {
-      httpParams = httpParams.set('depth', depth.toString());
-    }
-    if (paginateRootChildren !== undefined) {
-      httpParams = httpParams.set('paginateRootChildren', paginateRootChildren.toString());
-    }
-    if (page !== undefined) {
-      httpParams = httpParams.set('page', page.toString());
-    }
-    if (limit !== undefined) {
-      httpParams = httpParams.set('limit', limit.toString());
-    }
-
+    id: string
+  ): Observable<PathApiResponse> {
     const url = `${this.apiUrl}/${type}/${id}/hierarchy`;
-    return this.http.get<HierarchyApiResponse>(url, { params: httpParams }).pipe(
+    return this.http.get<PathApiResponse>(url).pipe(
       catchError(error => {
-        console.error('Hierarchy fetch error:', error);
+        console.error('Path fetch error:', error);
         return throwError(() => error);
       })
     );
+  }
+
+  /**
+   * @deprecated Use getPath instead. This method is kept for backward compatibility.
+   */
+  getHierarchy(type: SearchType, id: string): Observable<PathApiResponse> {
+    return this.getPath(type, id);
   }
 }
 

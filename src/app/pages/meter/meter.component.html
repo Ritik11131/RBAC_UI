@@ -5,10 +5,38 @@
   [config]="config"
   [actions]="actions"
   [idKey]="'id'"
+  [loading]="isLoading"
+  [serverSidePagination]="true"
+  [totalRecords]="totalRecords"
   (pageChange)="onPageChange($event)"
   (itemsPerPageChange)="onItemsPerPageChange($event)"
   (sortChange)="onSortChange($event)"
   (searchChange)="onSearchChange($event)"
   (selectionChange)="onSelectionChange($event)"
   (actionClick)="onActionClick($event)"
+  (createClick)="onCreateClick()"
+  (entityFilterChange)="onEntityFilterChange($event)"
 ></app-generic-data-table>
+
+<!-- Meter Form Modal -->
+@if (formConfig) {
+  <app-generic-form-modal
+    [isOpen]="isFormModalOpen"
+    [config]="formConfig"
+    [isLoading]="isLoadingEditData"
+    (close)="onFormModalClose()"
+    (success)="onFormModalSuccess($event)"
+    (error)="onFormModalError($event)"
+  />
+}
+
+<!-- Entity Creation Modal -->
+@if (entityFormConfig) {
+  <app-generic-form-modal
+    [isOpen]="isEntityModalOpen"
+    [config]="entityFormConfig"
+    (close)="onEntityModalClose()"
+    (success)="onEntityCreated($event)"
+    (error)="onEntityModalError($event)"
+  />
+}
