@@ -39,35 +39,51 @@
     }
 
     <!-- Profile Path -->
-    @if (isProfile() && profileData && profilePath) {
+    @if (isProfile() && profileData && profileEntityPath && profileUserPath) {
       <div class="space-y-4">
         <div class="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
           <div class="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1">Profile</div>
           <div class="text-sm font-medium text-gray-900 dark:text-white">{{ profileData.name }}</div>
         </div>
-        <div>
-          <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Path:</div>
-          <app-path-display [path]="profilePath" />
-        </div>
+        @if (profileEntityPath.length > 0) {
+          <div>
+            <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Entity Path:</div>
+            <app-path-display [path]="profileEntityPath" />
+          </div>
+        }
+        @if (profileUserPath.length > 0) {
+          <div>
+            <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">User Path:</div>
+            <app-path-display [path]="profileUserPath" />
+          </div>
+        }
       </div>
     }
 
     <!-- Role Path -->
-    @if (isRole() && roleData && rolePath) {
+    @if (isRole() && roleData && roleEntityPath && roleUserPath) {
       <div class="space-y-4">
         <div class="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
           <div class="text-xs font-semibold text-orange-700 dark:text-orange-300 mb-1">Role</div>
           <div class="text-sm font-medium text-gray-900 dark:text-white">{{ roleData.name }}</div>
         </div>
-        <div>
-          <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Path:</div>
-          <app-path-display [path]="rolePath" />
-        </div>
+        @if (roleEntityPath.length > 0) {
+          <div>
+            <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Entity Path:</div>
+            <app-path-display [path]="roleEntityPath" />
+          </div>
+        }
+        @if (roleUserPath.length > 0) {
+          <div>
+            <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">User Path:</div>
+            <app-path-display [path]="roleUserPath" />
+          </div>
+        }
       </div>
     }
 
     <!-- Meter Path -->
-    @if (isMeter() && meterData && meterPath) {
+    @if (isMeter() && meterData && meterEntityPath && meterUserPath) {
       <div class="space-y-4">
         <div class="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
           <div class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">Meter</div>
@@ -76,10 +92,18 @@
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ meterData.meter_type }}</div>
           }
         </div>
-        <div>
-          <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Path:</div>
-          <app-path-display [path]="meterPath" [meterData]="meterData" />
-        </div>
+        @if (meterEntityPath.length > 0) {
+          <div>
+            <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Entity Path:</div>
+            <app-path-display [path]="meterEntityPath" [meterData]="meterData" />
+          </div>
+        }
+        @if (meterUserPath.length > 0) {
+          <div>
+            <div class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">User Path:</div>
+            <app-path-display [path]="meterUserPath" [meterData]="meterData" />
+          </div>
+        }
       </div>
     }
   </div>

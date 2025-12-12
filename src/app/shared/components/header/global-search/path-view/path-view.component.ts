@@ -68,9 +68,14 @@ export class PathViewComponent {
     return this.isProfile() && response && 'profile' in response ? (response as ProfilePathResponse).profile : null;
   }
 
-  get profilePath(): PathItem[] | null {
+  get profileEntityPath(): PathItem[] | null {
     const response = this._pathResponse();
-    return this.isProfile() && response && 'path' in response ? (response as ProfilePathResponse).path : null;
+    return this.isProfile() && response && 'entityPath' in response ? (response as ProfilePathResponse).entityPath : null;
+  }
+
+  get profileUserPath(): PathItem[] | null {
+    const response = this._pathResponse();
+    return this.isProfile() && response && 'userPath' in response ? (response as ProfilePathResponse).userPath : null;
   }
 
   get roleData(): RolePathResponse['role'] | null {
@@ -78,9 +83,14 @@ export class PathViewComponent {
     return this.isRole() && response && 'role' in response ? (response as RolePathResponse).role : null;
   }
 
-  get rolePath(): PathItem[] | null {
+  get roleEntityPath(): PathItem[] | null {
     const response = this._pathResponse();
-    return this.isRole() && response && 'path' in response ? (response as RolePathResponse).path : null;
+    return this.isRole() && response && 'entityPath' in response ? (response as RolePathResponse).entityPath : null;
+  }
+
+  get roleUserPath(): PathItem[] | null {
+    const response = this._pathResponse();
+    return this.isRole() && response && 'userPath' in response ? (response as RolePathResponse).userPath : null;
   }
 
   get meterData(): MeterPathResponse['meter'] | null {
@@ -88,9 +98,14 @@ export class PathViewComponent {
     return this.isMeter() && response && 'meter' in response ? (response as MeterPathResponse).meter : null;
   }
 
-  get meterPath(): PathItem[] | null {
+  get meterEntityPath(): PathItem[] | null {
     const response = this._pathResponse();
-    return this.isMeter() && response && 'path' in response ? (response as MeterPathResponse).path : null;
+    return this.isMeter() && response && 'entityPath' in response ? (response as MeterPathResponse).entityPath : null;
+  }
+
+  get meterUserPath(): PathItem[] | null {
+    const response = this._pathResponse();
+    return this.isMeter() && response && 'userPath' in response ? (response as MeterPathResponse).userPath : null;
   }
 }
 

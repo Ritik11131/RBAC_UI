@@ -97,33 +97,36 @@ export interface UserPathResponse {
 }
 
 /**
- * Profile path response structure (path-only, linear array)
+ * Profile path response structure (path-only, linear arrays)
  */
 export interface ProfilePathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
   profile: Profile;
-  path: PathItem[];
+  entityPath: PathItem[];
+  userPath: PathItem[];
 }
 
 /**
- * Role path response structure (path-only, linear array)
+ * Role path response structure (path-only, linear arrays)
  */
 export interface RolePathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
   role: Role;
-  path: PathItem[];
+  entityPath: PathItem[];
+  userPath: PathItem[];
 }
 
 /**
- * Meter path response structure (path-only, linear array)
+ * Meter path response structure (path-only, linear arrays)
  */
 export interface MeterPathResponse {
   userEntity: UserEntityInfo;
   selectedResource: SelectedResource;
   meter: Meter;
-  path: PathItem[];
+  entityPath: PathItem[];
+  userPath: PathItem[];
 }
 
 /**
